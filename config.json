@@ -1,0 +1,11 @@
+{
+	"slackapitoken":"xoxb-333402997506-dDxbn56HLROHojOODhEXNqtB",
+	"apinode":"https://wallet.lwf.io/",
+	"missedblockinterval":25,
+	"minmissedblocks":1,
+	"channels":[
+			],
+	"users":[
+			"deadpool"
+			]
+}
