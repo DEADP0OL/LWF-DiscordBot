@@ -1,12 +1,20 @@
 # Slackbot API Scripts for Delegate and Voter Notifications in LWF
 A set of algorithms to anlayze the blockchain and provide Slack notifications.
 
-Currently the script is focused on notifying delegates and voters of missed blocks. Future plans include:
+## Scheduled Notifications
 
-- Enhanced pool list responses
-  - Current rank 
-  - Recent productivity
+- Missed Blocks
+- Wallet Offline (In Development)
+- Consensus Below Threshold (In Development)
+
+## Commands
+
 - Blockchain metric responses
   - Block Height
   - Inactive "red" nodes
+- Pools
+- Enhanced pool list responses (In Development)
+  - Current rank 
+  - Recent productivity
+
 
