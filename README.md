@@ -1,4 +1,4 @@
-# Slackbot API Scripts for Delegate and Voter Notifications in LWF
+# Slackbot API Scripts for Delegate and Voter Notifications
 A set of algorithms to anlayze the blockchain and provide Slack notifications.
 
 ## Scheduled Notifications
