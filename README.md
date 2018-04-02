@@ -10,7 +10,7 @@ A set of algorithms to anlayze the blockchain and provide Slack notifications.
 ## Commands
 
 - Blockchain metric responses
-  - Block Height
+  - Block height, peers, consensus
   - Inactive "red" nodes
 - Pools
 - Enhanced pool list responses (In Development)
