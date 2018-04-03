@@ -38,3 +38,8 @@ A set of algorithms to anlayze the blockchain and provide Slack notifications.
 - channels: A list of channels to broadcast nofications on
 - users: A list of users to send direct messages of notifications to
 
+## Activation
+
+```python3 slackbot.py```
+
+```nohup bash slackbot.sh &```
