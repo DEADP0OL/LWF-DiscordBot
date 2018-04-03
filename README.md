@@ -40,6 +40,10 @@ A set of algorithms to anlayze the blockchain and provide Slack notifications.
 
 ## Activation
 
+start the python script
+
 ```python3 slackbot.py```
+
+or run the bash script to keep the python script running after closing the terminal
 
 ```nohup bash slackbot.sh &```
