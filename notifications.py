@@ -1,7 +1,7 @@
 from functions import *
 from requests.exceptions import ConnectionError
 #obtain config variables and initiate slack client
-apitoken,url,blockinterval,minmissedblocks,channelnames,usernames=getconfigs('config.json')
+apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
 message =''
 #send a message that the url is not available
 try:
@@ -16,7 +16,7 @@ if message =='':
         print("Counters Initialized")
     delegates=processdelegates(delegatesnew,delegates)
     delegates,missedblockmsglist=makemissedblockmsglist(delegates,blockinterval,minmissedblocks)
-    delegates.to_csv('delegates.csv')
+    #delegates.to_csv('delegates.csv')
     if len(missedblockmsglist)>0:
         slacknames=getusernames('slacknames.json')
         userlist=getuserlist(apitoken)

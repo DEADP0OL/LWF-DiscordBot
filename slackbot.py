@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import time
-import re
 from functions import *
 
 #obtain config variables and initiate slack client
-apitoken,url,blockinterval,minmissedblocks,channelnames,usernames=getconfigs('config.json')
+apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
 slack_client = SlackClient(apitoken)
+slacknames=getusernames('slacknames.json')
+userlist=getuserlist(apitoken)
 
 # slackbot unique constants
 RTM_READ_DELAY = 2 # 1 second delay between reading from RTM
@@ -30,7 +31,7 @@ def parse_bot_commands(slack_events):
                 return message.lower(), event["channel"]
             else:
                 poollist, pools = parse_direct_calls(event["text"],POOLLIST_REGEX)
-                if poollist=="Sharing Pools":
+                if poollist=="Sharing Pools" and len(pools)>1000:
                     pooltext='*_`'+poollist+'`_*'+pools
                     f= open(POOLSTXTFILE,"w+")
                     f.write(pooltext)
@@ -58,14 +59,21 @@ def handle_command(command, channel):
         delegates = pd.read_csv("delegates.csv",index_col=0)
         delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,minmissedblocks,True)
         if len(missedblockmsglist)>0:
+            missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,slacknames,userlist)
             response=makemissedblockmsg(missedblockmsglist,0,True)
         else: 
             response = "No red nodes"
+    # pools forging
+    elif command.startswith('pools forging') or command.startswith('forging pools'):
+        pools= getpools(POOLSTXTFILE)
+        delegates = pd.read_csv("delegates.csv",index_col=0)
+        poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
+        response=printforgingpools(poolstats)
     # pools response
     elif command.startswith('pools'):
-        f= open(POOLSTXTFILE,"r")
-        response=f.read()
-        f.close
+        file= open(POOLSTXTFILE,"r")
+        response=file.read()
+        file.close
     # blockchain/connection status
     elif command.startswith('height') or command.startswith('block height') or command.startswith('status'):
         height,connectedpeers,peerheight,consensus=getstatus(url)

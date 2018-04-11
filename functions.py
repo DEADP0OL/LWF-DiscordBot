@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 import requests
 import json
+import re
 from slackclient import SlackClient
 from collections import defaultdict
 
@@ -15,7 +17,10 @@ def getconfigs(file):
     minmissedblocks = configs.get("minmissedblocks")
     channelnames = configs.get("channels")
     usernames = configs.get("users")
-    return apitoken,url,blockinterval,minmissedblocks,channelnames,usernames
+    numdelegates = configs.get("numdelegates")
+    blockrewards = configs.get("blockrewards")
+    blockspermin = configs.get("blockspermin")
+    return apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin
 
 def getusernames(file):
     #gets username mappings from the JSON file
@@ -115,6 +120,7 @@ def getallchannelids(channelids,userids,apitoken):
 
 def processdelegates(delegatesnew,delegates):
     #compares the current and previous delegate block counts to track consecutive missed/produced blocks  
+    delegatesold=delegates
     delegatesnew['missedblocksmsg']=0
     if delegates is None:
         #if no previous delegate block counts are available, start missed/produced block counters at 0 
@@ -135,7 +141,9 @@ def processdelegates(delegatesnew,delegates):
         #resets all counters to 0 if a delegate begins forging
         delegatesnew.loc[delegatesnew['newmissedblocks'].isnull(), ['newmissedblocks','missedblocksmsg','newproducedblocks']] = 0
         delegatesnew=delegatesnew.drop(['missedold','producedold','msgold'],axis=1)
-        return delegatesnew
+        if len(delegatesnew[delegatesnew['newproducedblocks']<0].index)>0
+	    delegatesnew=delegatesold
+	return delegatesnew
 
 def checknames(name):
     #creates a list of delegate name variations to compare with slack names
@@ -200,3 +208,57 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
                 message=message+i["username"]
         message=message+" :alert:"
     return message
+
+'''__________RESPONSE FUNCTIONS___________'''
+
+def getpools(file):
+    pfile = open(file, 'r')
+    pools = pfile.read()
+    pfile.close
+    pools = pools.replace('`','').lower()
+    pools = max(pools.split('*'), key=len).split(';')
+    pools = pd.DataFrame(pools,columns=['string'])
+    pools['string'].str.lower()
+    pools = pools['string'].str.extractall(r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$')
+    dropcols=['coin']
+    pools=pools.drop(dropcols,axis=1)
+    pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = np.nan
+    pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = 2
+    pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = 7
+    pools.loc[pools['listed_frequency']=='d', ['listed_frequency']] = 1
+    pools['listed_frequency']=pd.to_numeric(pools['listed_frequency'])
+    pools['min_payout']=pd.to_numeric(pools['min_payout'])
+    pools.rename(columns={'percentage': 'listed % share'}, inplace=True)
+    pools=pd.melt(pools, id_vars=['listed % share','listed_frequency','min_payout','website'], var_name='delegatenumber', value_name='delegate')
+    del pools['delegatenumber']
+    pools=pools.loc[pools['delegate'].notnull()]
+    pools=pools.reset_index(drop=True)
+    pools['listed % share']=pd.to_numeric(pools['listed % share'])
+    pools=pools.sort_values(by='listed % share',ascending=False)
+    return pools
+
+def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=10000):
+    delegates=delegates[['username','rank','vote','address']]
+    totalrewardsperday=blockrewards*blockspermin*60*24/numdelegates
+    poolstats=pd.merge(pools,delegates,how='left',left_on='delegate',right_on='username')
+    poolstats['rewards/day']=((balance/poolstats['vote'])*totalrewardsperday*(poolstats['listed % share']/100)).round(2)
+    del poolstats['username']
+    poolstats=poolstats[poolstats['vote']>=0]
+    poolstats['rank']=poolstats['rank'].astype('int64')
+    poolstats['listed % share']=poolstats['listed % share'].astype('int64')
+    del poolstats['vote']
+    cols = list(poolstats)
+    cols.insert(0, cols.pop(cols.index('rank')))
+    poolstats = poolstats.ix[:, cols]
+    poolstats=poolstats.sort_values(by='rewards/day',ascending=False)
+    return poolstats
+
+def printforgingpools(pools):
+    cleanpools='*`Sharing Pools (Forging)`* -'
+    pools['delegate']='_#'+pools['rank'].astype(str)+'_-*'+pools['delegate']+'*'
+    pools=pools.groupby(['listed % share'])['delegate'].apply(', '.join).reset_index()
+    pools=pools.sort_values(by='listed % share',ascending=False)
+    for index,row in pools.iterrows():
+        cleanpools+=' `'+str(row['listed % share'])+'%'+'` '+row['delegate']
+    cleanpools+=' *_`We in no way endorse any of the pools shown here and only provide the list as a help to the community. The list only reflects the information we have been provided, we cannot police the pools and voters should do their due diligence before voting`_*'
+    return cleanpools
