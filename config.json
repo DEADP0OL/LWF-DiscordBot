@@ -1,10 +1,15 @@
 {
-	"slackapitoken":"xoxb-xxxxxxxxxxxxxxxxxxx",
-	"apinode":"https://wallet.lwf.io/",
-	"missedblockinterval":25,
-	"minmissedblocks":1,
-	"channels":[
-			],
-	"users":[
-			]
+    "slackapitoken":"xoxb-333402997506-pfd9OWrmlGzqDN21gXy37quV",
+    "apinode":"https://wallet.lwf.io/",
+    "missedblockinterval":15000,
+    "minmissedblocks":1,
+    "channels":[
+            ],
+    "users":[
+            "deadpool",
+            "gandal"
+            ],
+    "numdelegates":201,
+    "blockrewards":5,
+    "blockspermin":4
 }

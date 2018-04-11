@@ -1,7 +1,7 @@
 from functions import *
 from requests.exceptions import ConnectionError
 #obtain config variables and initiate slack client
-apitoken,url,blockinterval,minmissedblocks,channelnames,usernames=getconfigs('config.json')
+apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
 message =''
 #send a message that the url is not available
 try:
