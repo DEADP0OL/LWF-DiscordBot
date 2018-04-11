@@ -170,7 +170,7 @@ def modifymissedblockmsglist(missedblockmsglist,slacknames,userlist):
         names=checknames(delegate)
         for j in slacknames:
             if delegate == j["delegate"]:
-                names.append(str(j["username"]).lower())
+                names.append(str(j["slackname"]).lower())
         for x in [v for v in userlist if (str(v.get('name')).lower() in names) or (str(v.get('real_name')).lower() in names) or (str(v['profile'].get('display_name')).lower() in names) ]:
             name="<@"+x.get('id')+">"
         i["username"]=delegate + ' ' + name + ' '
