@@ -2,9 +2,9 @@
     "slackapitoken":"xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "apinode":"https://wallet.lwf.io/",
     "backupnodes":[
-            "51.254.210.64",
-            "139.59.179.52",
-            "146.185.158.174"
+            "http://51.254.210.64:18124/",
+            "http://139.59.179.52:18124/",
+            "http://146.185.158.174:18124/"
             ],
     "missedblockinterval":15000,
     "minmissedblocks":1,
