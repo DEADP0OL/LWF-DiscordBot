@@ -1,21 +1,21 @@
 # Slackbot API Scripts for Delegate and Voter Notifications
-A set of algorithms to anlayze the blockchain and provide Slack notifications.
+A set of algorithms to analyze the blockchain and provide Slack notifications
 
-## Scheduled Notifications
+## Notifications
 
 - Missed Blocks
 - Wallet Offline (In Development)
-- Consensus Below Threshold (In Development)
+- Network Consensus Below Threshold (In Development)
 
-## Commands
+## Responses
 
 - Blockchain metric responses
   - Block height, peers, consensus
   - Inactive "red" nodes
 - Pools
-- Enhanced pool list responses (In Development)
+- Enhanced pool list responses
   - Current rank 
-  - Recent productivity
+  - Recent productivity (In Development)
 
 ## Installation
 
@@ -40,10 +40,26 @@ A set of algorithms to anlayze the blockchain and provide Slack notifications.
 
 ## Activation
 
-start the python script
+### Notifications
+
+Notifications can be scheduled via crontab
+
+```crontab -e```
+
+Add a line to run the notifications script regularly. The example below runs it every hour at the top of the hour
+
+```0 * * * * cd LWF-SlackBot && python3 notifications.py && cd```
+
+### Responses
+
+Start the python script
 
 ```python3 slackbot.py```
 
-or run the bash script to keep the python script running after closing the terminal
+To keep the python script running after closing the terminal run the following command
 
 ```nohup bash slackbot.sh &```
+
+To end the python script run the following command
+
+```pkill -f slackbot```
