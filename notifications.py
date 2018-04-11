@@ -16,7 +16,7 @@ if message =='':
         print("Counters Initialized")
     delegates=processdelegates(delegatesnew,delegates)
     delegates,missedblockmsglist=makemissedblockmsglist(delegates,blockinterval,minmissedblocks)
-    #delegates.to_csv('delegates.csv')
+    delegates.to_csv('delegates.csv')
     if len(missedblockmsglist)>0:
         slacknames=getusernames('slacknames.json')
         userlist=getuserlist(apitoken)
