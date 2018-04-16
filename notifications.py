@@ -1,13 +1,9 @@
 from functions import *
-from requests.exceptions import ConnectionError
-#obtain config variables and initiate slack client
-apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
+#obtain config variables
+apitoken,url,backup,port,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin$
 message =''
-#send a message that the url is not available
-try:
-    delegatesnew=getdelegates(url)
-except ConnectionError:
-    message=url+' appears to be offline.'
+
+delegatesnew=getdelegates(url)
 if message =='':
     try:
         delegates = pd.read_csv("delegates.csv",index_col=0)
