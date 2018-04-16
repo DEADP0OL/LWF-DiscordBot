@@ -4,14 +4,14 @@ import time
 from functions import *
 
 #obtain config variables and initiate slack client
-apitoken,url,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
+apitoken,url,backup,port,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
 slack_client = SlackClient(apitoken)
 slacknames=getusernames('slacknames.json')
 userlist=getuserlist(apitoken)
 
 # slackbot unique constants
-RTM_READ_DELAY = 2 # 1 second delay between reading from RTM
-EXAMPLE_COMMAND = "help, red nodes, height, pools"
+RTM_READ_DELAY = 1 # 1 second delay between reading from RTM
+EXAMPLE_COMMAND = "help, red nodes, height, pools, forging pools"
 HELP_COMMAND = EXAMPLE_COMMAND.replace('help, ','')
 MENTION_REGEX = "^<@(|[WU].+?)>(.*)"
 POOLLIST_REGEX = "^\*_`([\w ]+)`_\*(.*)"
@@ -53,15 +53,15 @@ def handle_command(command, channel):
     """
     # help response
     if command.startswith('help'):
-        response = "Try *{}*.".format(HELP_COMMAND)
+        response = "Available commands: *{}*.".format(HELP_COMMAND)
     # red nodes response
-    elif command.startswith('red'):
+    elif command.startswith('red nodes'):
         delegates = pd.read_csv("delegates.csv",index_col=0)
-        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,minmissedblocks,True)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
         if len(missedblockmsglist)>0:
             missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,slacknames,userlist)
             response=makemissedblockmsg(missedblockmsglist,0,True)
-        else: 
+        else:
             response = "No red nodes"
     # pools forging
     elif command.startswith('pools forging') or command.startswith('forging pools'):
@@ -76,8 +76,11 @@ def handle_command(command, channel):
         file.close
     # blockchain/connection status
     elif command.startswith('height') or command.startswith('block height') or command.startswith('status'):
-        height,connectedpeers,peerheight,consensus=getstatus(url)
-        response = '{} Height: {}\nPeer Count: {}, Peer Height: {}, \nConsensus: {}%'.format(url,height,connectedpeers,peerheight,consensus)
+        connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup)
+        response=''
+        for key,value in backupheights.items():
+            response+=cleanurl(key,port)+ ' Height: '+str(value)+'\n'
+        response+='Peer Count: {}, Peer Height: {}\nConsensus: {}%'.format(connectedpeers,peerheight,consensus)
     # default response for unknown commands
     else:
         response = "Not sure what you mean. Try *{}*.".format(EXAMPLE_COMMAND)
