@@ -1,6 +1,6 @@
 from functions import *
 #obtain config variables
-apitoken,url,backup,port,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin$
+apitoken,url,backup,port,blockinterval,minmissedblocks,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('config.json')
 message =''
 
 delegatesnew=getdelegates(url)
