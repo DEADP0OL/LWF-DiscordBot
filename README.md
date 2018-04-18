@@ -32,6 +32,8 @@ A set of algorithms to analyze the LWF blockchain and provide Discord notificati
 
 ## Configuration
 
+```nano resources/config.json```
+
 - discordapitoken: The apitoken assigned to your bot
 - apinode: The public node url or ip address for api requests (default https://wallet.lwf.io/)
 - backupnodes: A list of nodes with api access to reach
