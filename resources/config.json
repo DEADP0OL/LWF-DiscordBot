@@ -1,5 +1,5 @@
 {
-    "slackapitoken":"xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "discordapitoken":"xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     "apinode":"https://wallet.lwf.io/",
     "backupnodes":[
             "http://explorernode1.lwf.io:18124/",
@@ -14,11 +14,12 @@
     "port":"18124",
     "blockintervalnotification":15000,
     "minmissedblocks":2,
+    "server":"lwfbot-test",
     "channels":[
-            "lwf_mainnet",
-            "lwf_bot"
+            "general"
             ],
     "users":[
+            "deadpool"
             ],
     "numdelegates":201,
     "blockrewards":5,
