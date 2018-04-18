@@ -28,7 +28,7 @@ A set of algorithms to analyze the LWF blockchain and provide Discord notificati
 
 ```pip3 install requests```
 
-```pip install -U discord.py```
+```pip3 install --user -U discord.py```
 
 ## Configuration
 
