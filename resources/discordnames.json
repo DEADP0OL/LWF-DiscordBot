@@ -1,5 +1,5 @@
 [
-        {"delegate":"ostaps_pool","slackname":"Ostap"},
-        {"delegate":"cocodynamic_pool","slackname":"Coco Dynamics"},
-        {"delegate":"forward.dpospool.io","slackname":"forwarder_pool"}
+        {"delegate":"ostaps_pool","discordname":"Ostap"},
+        {"delegate":"cocodynamic_pool","discordname":"Coco Dynamics"},
+        {"delegate":"forward.dpospool.io","discordname":"forwarder_pool"}
 ]
