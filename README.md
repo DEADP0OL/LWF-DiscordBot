@@ -51,26 +51,26 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ### Notifications
 
-Notifications can be scheduled via crontab
+Notifications can be scheduled via crontab.
 
 ```crontab -e```
 
-Add a line to run the notifications script regularly. The example below runs it every hour at the top of the hour
+Add a line to run the notifications script regularly. The example below runs it every hour at the top of the hour.
 
 ```0 * * * * cd LWF-DiscordBot && python3 notifications.py && cd```
 
 ### Responses
 
-Start the python script
+Start the python script.
 
 ```cd LWF-DiscordBot```
 
 ```./lwfmain-bot.py```
 
-To keep the python script running after closing the terminal run the following command
+To keep the python script running after closing the terminal run the following command.
 
 ```nohup ./lwfmain-bot.sh &```
 
-To end the python script run the following command
+To end the python script run the following command.
 
 ```pkill -f lwfmain-bot```
