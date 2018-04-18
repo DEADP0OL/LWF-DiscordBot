@@ -41,10 +41,10 @@ def getusernames(file):
 
 '''___________NODE API FUNCTIONS___________'''
 
-def getdelegates(url):
+def getdelegates(url,multiplier=100000000):
     #gets current delegates from the url node api
     delegates = pd.DataFrame(requests.get(url+'api/delegates?orderBy=vote').json()['delegates'])
-    delegates['vote']=pd.to_numeric(delegates['vote'])
+    delegates['vote']=pd.to_numeric(delegates['vote'])/multiplier
     return delegates
 
 def getpeers(url):
@@ -57,7 +57,7 @@ def getstatus(url,backup,port,tol=1):
     backupheights={}
     for i in backup:
         try:
-            backupheights[cleanurl(i,port)]='{:.0f}'.format(getheight(i))
+            backupheights[cleanurl(i,port)]='{:,.0f}'.format(getheight(i))
         except:
             backupheights[cleanurl(i,port)]='not available'
     peers=getpeers(url)
@@ -66,8 +66,8 @@ def getstatus(url,backup,port,tol=1):
     connectedpeers=len(peers)
     peerheight=peers['height'].mode()[0]    #calculates the mode height from connected peers
     consensus=round(len(peers[abs(peers['height']-peerheight)<=tol])/total*100,2) #calculates consensus from peer height
-    backupheights['Peers: '+str(connectedpeers)]='{:.0f}'.format(peerheight)
-    backupheights['Consensus (%)']=consensus
+    backupheights['Peers: '+str(connectedpeers)]='{:,.0f}'.format(peerheight)
+    backupheights['Consensus']='{:.0f}'.format(consensus)+'%'
     backupheights=pd.DataFrame.from_dict(backupheights,orient='index')
     backupheights.columns = ['Height']
     return connectedpeers,peerheight,consensus,backupheights
@@ -103,7 +103,7 @@ def getuserids(usernames,server):
         userids[name]=id
     return userids
 
-def formatmsg(message,maxlen=1990,prefix1='```',style='md',prefix2='\n',suffix='\n```',seps=[' ',',']):
+def formatmsg(message,maxlen=1990,prefix1='```',style='',prefix2='\n',suffix='\n```',seps=[' ',',']):
     #breaks the message up according to discords text limit and adds code blocks by default
     messages=[]
     messagelen=len(message)
@@ -285,13 +285,38 @@ def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=
 
 def printforgingpools(pools):
     #filters the pools based on rank and groups them by sharing percentage
+    bld='**'
+    ul='__'
     cleanpools='*`Sharing Pools (Forging)`* -'
     pools=pools.sort_values(by='rank')
     #pools['delegate']='_#'+pools['rank'].astype(str)+'_-**'+pools['delegate']+'**'
-    pools['delegate']='**'+pools['delegate']+'**'
+    pools['delegate']=ul+pools['delegate']+ul
     pools=pools.groupby(['listed % share'])['delegate'].apply(', '.join).reset_index()
     pools=pools.sort_values(by='listed % share',ascending=False)
     for index,row in pools.iterrows():
-        cleanpools+=' __'+str(row['listed % share'])+'%'+'__ '+row['delegate']
+        cleanpools+=' '+bld+str(row['listed % share'])+'%'+bld+' '+row['delegate']
     cleanpools+=' We in no way endorse any of the pools shown here and only provide the list as a help to the community. The list only reflects the information we have been provided, we cannot police the pools and voters should do their due diligence before voting.'
     return cleanpools
+
+def printdelegates(delegates):
+    #outputs the delegates list in a friendly format
+    bld='**'
+    ul='__'
+    #delegates['voteweight'] = round(delegates['vote']/1000,).astype(str) + 'K'
+    delegates['voteweight'] = (delegates['vote']/1000).map('{:,.0f}'.format).astype(str) + 'K'
+    cleandelegates=delegates[['rank','username','approval','voteweight']].to_string(index=False)
+    return cleandelegates
+
+def getprice(priceurl,coin,suffix='/'):
+    #retrieves the price data for a specified coin
+    url=priceurl+coin.lower()+suffix
+    request=requests.get(url).json()
+    data=request[0]
+    price_usd=data['price_usd']
+    #price_btc=data['price_btc']
+    leaveout=['id','last_updated']
+    for key in leaveout:
+        data.pop(key, None)
+    pricesummary=pd.DataFrame.from_dict(data,orient='index')
+    pricesummary=pricesummary.to_string(header=False)
+    return price_usd,pricesummary
