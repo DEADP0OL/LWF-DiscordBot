@@ -1,5 +1,6 @@
-# Slackbot API Scripts for Delegate and Voter Notifications
-A set of algorithms to analyze the blockchain and provide Slack notifications
+# DiscordBot API Scripts for Delegate and Voter Notifications
+
+A set of algorithms to analyze the LWF blockchain and provide Discord notifications
 
 ## Notifications
 
@@ -19,24 +20,30 @@ A set of algorithms to analyze the blockchain and provide Slack notifications
 
 ## Installation
 
-```git clone https://github.com/DEADP0OL/LWF-SlackBot```
+```git clone https://github.com/DEADP0OL/LWF-DiscordBot```
 
-```cd LWF-SlackBot```
+```cd LWF-DiscordBot```
 
 ```apt-get install python3-pip```
 
 ```pip3 install requests```
 
-```pip3 install slackclient```
+```pip install -U discord.py```
 
 ## Configuration
 
-- slackapitoken: The apitoken assigned to your slackbot (ex: xoxb-############-###############)
+- discordapitoken: The apitoken assigned to your bot
 - apinode: The public node url or ip address for api requests (default https://wallet.lwf.io/)
-- missedblockinterval: The number of consecutive missed blocks required to reissue a slack alert
-- minmissedblocks: The number of consecutive missed blocks required for an initial slack alert
+- backupnodes: A list of nodes with api access to reach
+- port: port number for api access
+- blockintervalnotification: The number of consecutive blocks required to reissue a notifications
+- minmissedblocks: The number of consecutive missed blocks required for an initial notification
+- server: The discord server to use for notifications and responses
 - channels: A list of channels to broadcast nofications on
 - users: A list of users to send direct messages of notifications to
+- numdelegates: The number of forging delegates on the blockchain
+- blockrewards: The reward quantity for forging a block on the blockchain
+- blockspermin: The number of blocks forged per a minute on the blockchain
 
 ## Activation
 
@@ -48,18 +55,20 @@ Notifications can be scheduled via crontab
 
 Add a line to run the notifications script regularly. The example below runs it every hour at the top of the hour
 
-```0 * * * * cd LWF-SlackBot && python3 notifications.py && cd```
+```0 * * * * cd LWF-DiscordBot && python3 notifications.py && cd```
 
 ### Responses
 
 Start the python script
 
-```python3 slackbot.py```
+```cd LWF-DiscordBot```
+
+```./lwfmain-bot.py```
 
 To keep the python script running after closing the terminal run the following command
 
-```nohup bash slackbot.sh &```
+```nohup ./lwfmain-bot.sh &```
 
 To end the python script run the following command
 
-```pkill -f slackbot```
+```pkill -f lwfmain-bot```
