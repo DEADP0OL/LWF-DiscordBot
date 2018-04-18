@@ -1,6 +1,6 @@
-# DiscordBot API Scripts for Delegate and Voter Notifications
+# DiscordBot API Scripts for Delegate and Voter Messages
 
-A set of algorithms to analyze the LWF blockchain and provide Discord notifications
+A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Notifications
 
