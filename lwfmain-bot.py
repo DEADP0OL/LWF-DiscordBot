@@ -12,6 +12,7 @@ poolstxtfile="files/pools.txt"
 delegatecsv="files/delegates.csv"
 discordnames=getusernames('resources/discordnames.json')
 msglimit=1800
+priceurl='https://api.coinmarketcap.com/v1/ticker/'
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(command), description=description)
 
@@ -23,6 +24,25 @@ async def on_ready():
     server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
     print(server)
     print('------')
+
+@bot.command()
+async def price(coin='lwf'):
+    """Retrieves price data for a specified coin."""
+    try:
+        price,response=getprice(priceurl, coin)
+    except:
+        await bot.say('Command incorrect, try '+command+'price bitcoin')
+        return
+    for response in formatmsg(response):
+        await bot.say(response)
+    
+@bot.command()
+async def delegates():
+    """Returns the list of delegates in order of rank."""
+    delegates = pd.read_csv(delegatecsv,index_col=0)
+    response=printdelegates(delegates)
+    for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
+        await bot.say(response)
 
 @bot.command()
 async def rednodes():
