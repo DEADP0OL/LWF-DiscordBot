@@ -331,11 +331,30 @@ def getprice(priceurl,coin,suffix='/'):
     data=request[0]
     price_usd=data['price_usd']
     #price_btc=data['price_btc']
-    leaveout=['id','last_updated']
+    leaveout=['id','last_updated','max_supply','available_supply','total_supply']
+    data2=data.copy()
+    for key,value in data2.items():
+        if '_usd' in key:
+            if float(value)>1000000:
+                data[key.replace('_usd','')]="${:,.2f}MM".format(float(value)/1000000)
+            elif float(value)>1000:
+                data[key.replace('_usd','')]="${:,.2f}K".format(float(value)/1000)
+            elif float(value)>1:
+                data[key.replace('_usd','')]="${:,.2f}".format(float(value))
+            else:
+                data[key.replace('_usd','')]='$'+str(value)
+            leaveout.append(key)
+        if '_btc' in key:
+            data[key.replace('_btc',' (BTC)')]=str(value)+' BTC'
+            leaveout.append(key)
+        if 'percent_change_' in key:
+            data[key.replace('percent_change_','')]="{0:.2f}%".format(float(value))
+            leaveout.append(key)
     for key in leaveout:
         data.pop(key, None)
-    pricesummary=pd.DataFrame.from_dict(data,orient='index')
-    pricesummary=pricesummary.to_string(header=False)
+    pricesummary=data
+    #pricesummary=pd.DataFrame.from_dict(data,orient='index')
+    #pricesummary=pricesummary.to_string(header=False)
     return price_usd,pricesummary
 
 def insertblankrow(df,ind):
@@ -345,3 +364,12 @@ def insertblankrow(df,ind):
     result=df.iloc[:ind].append(blank,ind)
     result=result.append(df.iloc[ind:],ind)
     return result
+    
+def embedpricesummary(pricesummary):
+    """formats the pricesummary as a discord embed object"""
+    embed=discord.Embed(title=pricesummary['name'], color=0x0080c0)#+' ('+pricesummary['symbol']+')', color=0x0080c0)
+    for key,result in pricesummary.items():
+        if (key != 'name'): #and (key != 'symbol'):
+            embed.add_field(name=key, value=result, inline=True)
+    embed.set_footer(text="https://coinmarketcap.com/")
+    return embed
