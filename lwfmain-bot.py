@@ -41,7 +41,9 @@ async def delegate(delegate='',limit=10):
     """Filters the delegate list by delegate name or rank."""
     delegates = pd.read_csv(delegatecsv,index_col=0)
     try:
-        if not delegate.isdigit():
+        if delegate=='':
+            response='Enter a delegate name or rank. Try '+command+'delegate 1'
+        elif not delegate.isdigit():
             if delegate.lower() in delegates['username'].str.lower().values:
                 rank=delegates.loc[delegates['username'].str.lower() == delegate.lower(), 'rank'].iloc[0]
                 response=printdelegates(delegates,rank,limit)
