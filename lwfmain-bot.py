@@ -29,12 +29,14 @@ async def on_ready():
 async def price(coin='lwf'):
     """Retrieves price data for a specified coin."""
     try:
-        price,response=getprice(priceurl, coin)
+        price,pricesummary=getprice(priceurl, coin)
+        embed=embedpricesummary(pricesummary)
+        await bot.say(embed=embed)
     except:
         await bot.say('Command incorrect, try '+command+'price bitcoin')
         return
-    for response in formatmsg(response):
-        await bot.say(response)
+    #for response in formatmsg(response):
+        #await bot.say(response)
 
 @bot.command()
 async def delegate(delegate='',limit=10):
