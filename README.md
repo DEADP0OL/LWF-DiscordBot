@@ -14,9 +14,9 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 - rednodes - Inactive "red" nodes
 - pools - Current list of public sharing pools
 - forgingpools - Pools list filtered to currently forging pools
-- price *__coin__* - Crypto prices from coinmarketcap.com
+- price (*coin*) - Crypto prices from coinmarketcap.com
 - delegates - Outputs a list of delegates in order of rank
-- delegate *__name/rank__* - Finds delegate metrics based on name or rank
+- delegate (*name/rank*) - Finds delegate metrics based on name or rank
 
 ## Installation
 
