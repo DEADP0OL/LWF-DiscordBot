@@ -35,12 +35,36 @@ async def price(coin='lwf'):
         return
     for response in formatmsg(response):
         await bot.say(response)
+
+@bot.command()
+async def delegate(delegate='',limit=10):
+    """Filters the delegate list by delegate name or rank."""
+    delegates = pd.read_csv(delegatecsv,index_col=0)
+    try:
+        if not delegate.isdigit():
+            if delegate.lower() in delegates['username'].str.lower().values:
+                rank=delegates.loc[delegates['username'].str.lower() == delegate.lower(), 'rank'].iloc[0]
+                response=printdelegates(delegates,rank,limit)
+            else:
+                response='Cannot find that delegate'
+        else:
+            rank=int(delegate)
+            if rank in delegates['rank'].values:
+                response=printdelegates(delegates,rank,limit)
+            else:
+                response='Cannot find that delegate rank'
+    except:
+        await bot.say('Not sure what you mean. Try '+command+'delegate 1')
+        return
+    for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
+        await bot.say(response)
     
 @bot.command()
-async def delegates():
-    """Returns the list of delegates in order of rank."""
+async def delegates(limit=10):
+    """Returns the delegate list in order of rank."""
+    rank=numdelegates
     delegates = pd.read_csv(delegatecsv,index_col=0)
-    response=printdelegates(delegates)
+    response=printdelegates(delegates,rank,limit)
     for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
         await bot.say(response)
 
