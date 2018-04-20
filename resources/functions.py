@@ -11,7 +11,7 @@ from collections import defaultdict
 '''___________SETUP FUNCTIONS___________'''
 
 def getconfigs(file):
-    #extracts configs from JSON file
+    """extracts configs from JSON file"""
     configs = json.load(open(file))
     apitoken = configs.get("discordapitoken")
     url = configs.get("apinode")
@@ -28,32 +28,48 @@ def getconfigs(file):
     return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin
 
 def cleanurl(url,port):
-    #removes url components to display node 
+    """removes url components to display node""" 
     cleanitems=['https://','http://','/',':'+port]
     for i in cleanitems:
         url=url.replace(i,'')
     return url
 
 def getusernames(file):
-    #gets username mappings from the JSON file
+    """gets username mappings from the JSON file"""
     usernames=json.load(open(file))
     return usernames
 
 '''___________NODE API FUNCTIONS___________'''
 
-def getdelegates(url,multiplier=100000000):
-    #gets current delegates from the url node api
+def getdelegates(url,multiplier=100000000,numdelegates=201):
+    """gets current delegates from the url node api"""
+    i=0
+    minrank=numdelegates+50
     delegates = pd.DataFrame(requests.get(url+'api/delegates?orderBy=vote').json()['delegates'])
     delegates['vote']=pd.to_numeric(delegates['vote'])/multiplier
+    delegates['approval']=pd.to_numeric(delegates['approval'])
+    lowestrank = delegates['rank'].iloc[-1]
+    length = len(delegates)
+    while lowestrank<=minrank:
+        i=i+length
+        delegates1 = pd.DataFrame(requests.get(url+'api/delegates?offset='+str(i)+'&orderBy=vote').json()['delegates'])
+        if not delegates1.empty:
+            delegates1['vote']=pd.to_numeric(delegates1['vote'])/multiplier
+            delegates1['approval']=pd.to_numeric(delegates1['approval'])
+            lowestrank = delegates['rank'].iloc[-1]
+            delegates=delegates.append(delegates1,ignore_index=True)
+        else:
+            lowestrank = minrank+1
+    delegates=delegates.loc[delegates['rank']<=minrank]
     return delegates
 
 def getpeers(url):
-    #gets current peers from the url node api
+    """gets current peers from the url node api"""
     peers = pd.DataFrame(requests.get(url+'api/peers').json()['peers'])
     return peers
 
 def getstatus(url,backup,port,tol=1):
-    #gets current height from the list of backup nodes
+    """gets current height from the list of backup nodes"""
     backupheights={}
     for i in backup:
         try:
@@ -73,24 +89,24 @@ def getstatus(url,backup,port,tol=1):
     return connectedpeers,peerheight,consensus,backupheights
 
 def getheight(url):
-    #gets current block height from the url node api
+    """gets current block height from the url node api"""
     height = requests.get(url+'api/blocks/getHeight').json()['height']
     return height
 
 '''___________Discord API FUNCTIONS___________'''
 
 def getchannel(channelname,server):
-    #returns the channel object
+    """returns the channel object"""
     channel = discord.utils.find(lambda m: (m.name).lower() == channelname.lower(), server.channels)
     return channel
 
 def getuser(username,server):
-    #returns the member object
+    """returns the member object"""
     user = discord.utils.find(lambda m: (m.name).lower() == username.lower(), server.members)
     return user
 
 def getuserids(usernames,server):
-    #gets userids for specified usernames in a discord team userlist
+    """gets userids for specified usernames in a discord team userlist"""
     userids={}
     usernames=[v.lower() for v in usernames]
     userlist=server.members
@@ -104,7 +120,7 @@ def getuserids(usernames,server):
     return userids
 
 def formatmsg(message,maxlen=1990,prefix1='```',style='',prefix2='\n',suffix='\n```',seps=[' ',',']):
-    #breaks the message up according to discords text limit and adds code blocks by default
+    """breaks the message up according to discords text limit and adds code blocks by default"""
     messages=[]
     messagelen=len(message)
     b=0
@@ -127,7 +143,7 @@ def formatmsg(message,maxlen=1990,prefix1='```',style='',prefix2='\n',suffix='\n
 '''__________NOTIFICATION FUNCTIONS___________'''
 
 def processdelegates(delegatesnew,delegates):
-    #compares the current and previous delegate block counts to track consecutive missed/produced blocks
+    """compares the current and previous delegate block counts to track consecutive missed/produced blocks"""
     delegatesold=delegates
     delegatesnew['missedblocksmsg']=0
     if delegates is None:
@@ -154,7 +170,7 @@ def processdelegates(delegatesnew,delegates):
         return delegatesnew
 
 def checknames(name):
-    #creates a list of delegate name variations to compare with slack names
+    """creates a list of delegate name variations to compare with slack names"""
     names=[]
     names.append(name.lower())
     modifications={'_voting':'','_pool':''}
@@ -164,8 +180,8 @@ def checknames(name):
     return names
 
 def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevious=False):
-    #creates a list of delegates that have missed blocks
-    #when includeprevious is False, it will only include delegates that have either not previously been notified or have exceeded the blockinterval
+    """creates a list of delegates that have missed blocks. When includeprevious is False, 
+    it will only include delegates that have either not previously been notified or have exceeded the blockinterval"""
     missedblockmsglist=[]
     for index, row in delegates.loc[delegates['newmissedblocks']>=minmissedblocks].iterrows():
         if includeprevious is False:
@@ -178,7 +194,7 @@ def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevio
     return delegates,missedblockmsglist
 
 def modifymissedblockmsglist(missedblockmsglist,discordnames,server):
-    #modifies the list of users to notify to ping their slack username and id
+    """modifies the list of users to notify to ping their slack username and id"""
     userlist=server.members
     newmissedblockmsglist=[]
     for i in missedblockmsglist:
@@ -200,8 +216,8 @@ def modifymissedblockmsglist(missedblockmsglist,discordnames,server):
     return newmissedblockmsglist
 
 def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False):
-    #creates a message to notify delegates of missed blocks
-    #when includeprevious is False, it will only include delegates that have either not previously been notified or have exceeded the blockinterval
+    """creates a message to notify delegates of missed blocks. When includeprevious is False,
+    it will only include delegates that have either not previously been notified or have exceeded the blockinterval"""
     if includeprevious is False:
         message=""
         for i in missedblockmsglist:
@@ -240,7 +256,7 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
 '''__________RESPONSE FUNCTIONS___________'''
 
 def getpools(file):
-    #parses pools from raw string stored in a local file
+    """parses pools from raw string stored in a local file"""
     pfile = open(file, 'r')
     pools = pfile.read()
     pfile.close
@@ -267,7 +283,7 @@ def getpools(file):
     return pools
 
 def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=10000):
-    #merges pool data with current delegate api results
+    """merges pool data with current delegate api results"""
     delegates=delegates[['username','rank','vote','address']]
     totalrewardsperday=blockrewards*blockspermin*60*24/numdelegates
     poolstats=pd.merge(pools,delegates,how='left',left_on='delegate',right_on='username')
@@ -284,7 +300,7 @@ def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=
     return poolstats
 
 def printforgingpools(pools):
-    #filters the pools based on rank and groups them by sharing percentage
+    """filters the pools based on rank and groups them by sharing percentage"""
     bld='**'
     ul='__'
     cleanpools='*`Sharing Pools (Forging)`* -'
@@ -298,17 +314,18 @@ def printforgingpools(pools):
     cleanpools+=' We in no way endorse any of the pools shown here and only provide the list as a help to the community. The list only reflects the information we have been provided, we cannot police the pools and voters should do their due diligence before voting.'
     return cleanpools
 
-def printdelegates(delegates):
-    #outputs the delegates list in a friendly format
-    bld='**'
-    ul='__'
-    #delegates['voteweight'] = round(delegates['vote']/1000,).astype(str) + 'K'
+def printdelegates(delegates,rank,limit):
+    """outputs the delegates list in a friendly format"""
+    delegates=delegates.loc[(delegates['rank']>=rank-limit)&(delegates['rank']<=rank+limit)]
     delegates['voteweight'] = (delegates['vote']/1000).map('{:,.0f}'.format).astype(str) + 'K'
-    cleandelegates=delegates[['rank','username','approval','voteweight']].to_string(index=False)
+    delegates['productivity'] = delegates['productivity'].map('{:,.1f}%'.format)
+    ind=(delegates['rank'].values.tolist()).index(rank)
+    delegates=insertblankrow(delegates,ind+1)
+    cleandelegates=delegates[['rank','username','approval','voteweight','productivity']].to_string(index=False)
     return cleandelegates
 
 def getprice(priceurl,coin,suffix='/'):
-    #retrieves the price data for a specified coin
+    """retrieves the price data for a specified coin"""
     url=priceurl+coin.lower()+suffix
     request=requests.get(url).json()
     data=request[0]
@@ -320,3 +337,11 @@ def getprice(priceurl,coin,suffix='/'):
     pricesummary=pd.DataFrame.from_dict(data,orient='index')
     pricesummary=pricesummary.to_string(header=False)
     return price_usd,pricesummary
+
+def insertblankrow(df,ind):
+    """inserts a blank row into a dataframe at the specified index"""
+    cols=list(df.columns.values)
+    blank=pd.Series([''],index=cols)
+    result=df.iloc[:ind].append(blank,ind)
+    result=result.append(df.iloc[ind:],ind)
+    return result
