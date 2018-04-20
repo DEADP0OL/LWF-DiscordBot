@@ -10,13 +10,13 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Responses
 
-- ?height - Block height, peers, consensus
-- ?rednodes - Inactive "red" nodes
-- ?pools
-- ?forgingpools - Pools list filtered to currently forging pools
-- ?price *coin* - Crypto prices from coinmarketcap.com
-- ?delegates - Outputs a list of delegates in order of rank
-- ?delegate *name/rank* - Finds delegate metrics based on name or rank
+- height - Block height, peers, consensus
+- rednodes - Inactive "red" nodes
+- pools
+- forgingpools - Pools list filtered to currently forging pools
+- price *coin* - Crypto prices from coinmarketcap.com
+- delegates - Outputs a list of delegates in order of rank
+- delegate *name/rank* - Finds delegate metrics based on name or rank
 
 ## Installation
 
