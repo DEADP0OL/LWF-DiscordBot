@@ -2,10 +2,10 @@
 
 from resources.functions import *
 
-#obtain config variables and initiate slack client
+'''obtain config variables and initiate slack client'''
 apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('resources/config.json')
 command='?'
-example_command = "help, rednodes, height, pools, forgingpools"
+example_command = "help, price, delegate, delegates, rednodes, height, pools, forgingpools"
 help_command = example_command.replace('help, ','')
 description='A bot with scripts to analyze the LWF blockchain in addition to other relevant dynamic information. Use commands in conjunction with a direct bot mention or the command prefix "?".'
 poolstxtfile="files/pools.txt"
@@ -27,20 +27,18 @@ async def on_ready():
 
 @bot.command()
 async def price(coin='lwf'):
-    """Retrieves price data for a specified coin."""
+    """Retrieves price data for a specified coin. Ex: ?price bitcoin"""
     try:
         price,pricesummary=getprice(priceurl, coin)
-        embed=embedpricesummary(pricesummary)
+        embed=discordembeddict(pricesummary,['name'],pricesummary['name'],"https://coinmarketcap.com/currencies/"+coin)
         await bot.say(embed=embed)
     except:
         await bot.say('Command incorrect, try '+command+'price bitcoin')
         return
-    #for response in formatmsg(response):
-        #await bot.say(response)
 
 @bot.command()
 async def delegate(delegate='',limit=10):
-    """Filters the delegate list by delegate name or rank."""
+    """Filters the delegate list by delegate name or rank. Ex: ?delegate deadpool"""
     delegates = pd.read_csv(delegatecsv,index_col=0)
     try:
         if delegate=='':
@@ -89,7 +87,7 @@ async def rednodes():
 
 @bot.command()
 async def height():
-    """Provides the current height accross the core blockchain nodes."""
+    """Provides the current height accross core blockchain nodes."""
     connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
     response=repr(backupheights)
     for response in formatmsg(response):
@@ -111,7 +109,7 @@ async def forgingpools():
     delegates = pd.read_csv(delegatecsv,index_col=0)
     poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
     response=printforgingpools(poolstats)
-    for response in formatmsg(response,msglimit,'','','',''):
+    for response in formatmsg(response,msglimit,'','','','',['\n']):
         await bot.say(response)
 
 if __name__ == '__main__':
