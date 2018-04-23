@@ -14,9 +14,9 @@
     "port":"18124",
     "blockintervalnotification":15000,
     "minmissedblocks":2,
-    "server":"lwfbot-test",
+    "server":"lwf.io",
     "channels":[
-            "general"
+            "lwf_bot"
             ],
     "users":[
             ],
