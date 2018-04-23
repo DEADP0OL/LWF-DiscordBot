@@ -38,7 +38,7 @@ async def price(coin='lwf'):
 
 @bot.command()
 async def delegate(delegate='',limit=10):
-    """Filters the delegate list by delegate name or rank. Ex: ?delegate deadpool"""
+    """Filters the delegate list by name or rank. Ex: ?delegate deadpool"""
     delegates = pd.read_csv(delegatecsv,index_col=0)
     try:
         if delegate=='':
