@@ -25,9 +25,10 @@ async def on_ready():
     print(server)
     print('------')
 
-@bot.command()
-async def price(coin='lwf'):
+@bot.command(pass_context=True)
+async def price(ctx,coin='lwf'):
     """Retrieves price data for a specified coin. Ex: ?price bitcoin"""
+    assert ctx.message.channel in channelnames
     try:
         price,pricesummary=getprice(priceurl, coin)
         embed=discordembeddict(pricesummary,['name'],pricesummary['name'],"https://coinmarketcap.com/currencies/"+coin)
@@ -36,9 +37,10 @@ async def price(coin='lwf'):
         await bot.say('Command incorrect, try '+command+'price bitcoin')
         return
 
-@bot.command()
-async def delegate(delegate='',limit=10):
+@bot.command(pass_context=True)
+async def delegate(ctx,delegate='',limit=10):
     """Filters the delegate list by name or rank. Ex: ?delegate deadpool"""
+    assert ctx.message.channel in channelnames
     delegates = pd.read_csv(delegatecsv,index_col=0)
     try:
         if delegate=='':
@@ -61,19 +63,20 @@ async def delegate(delegate='',limit=10):
     for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
         await bot.say(response)
     
-@bot.command()
-async def delegates(limit=10):
+@bot.command(pass_context=True)
+async def delegates(ctx,limit=10):
     """Returns the delegate list in order of rank."""
+    assert ctx.message.channel in channelnames
     rank=numdelegates
     delegates = pd.read_csv(delegatecsv,index_col=0)
     response=printdelegates(delegates,rank,limit)
     for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
         await bot.say(response)
 
-@bot.command()
-async def rednodes():
+@bot.command(pass_context=True)
+async def rednodes(ctx):
     """Lists delegates that are currently missing blocks."""
-    server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+    assert ctx.message.channel in channelnames
     delegates = pd.read_csv(delegatecsv,index_col=0)
     delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
     if len(missedblockmsglist)>0:
@@ -85,26 +88,29 @@ async def rednodes():
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
 
-@bot.command()
-async def height():
+@bot.command(pass_context=True)
+async def height(ctx):
     """Provides the current height accross core blockchain nodes."""
+    assert ctx.message.channel in channelnames
     connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
     response=repr(backupheights)
     for response in formatmsg(response):
         await bot.say(response)
 
-@bot.command()
-async def pools():
+@bot.command(pass_context=True)
+async def pools(ctx):
     """Returns the pools list."""
+    assert ctx.message.channel in channelnames
     file= open(poolstxtfile,"r")
     response=file.read()
     file.close
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
 
-@bot.command()
-async def forgingpools():
+@bot.command(pass_context=True)
+async def forgingpools(ctx):
     """Returns the pools list filtered down to forging delegates."""
+    assert ctx.message.channel in channelnames
     pools= getpools(poolstxtfile)
     delegates = pd.read_csv(delegatecsv,index_col=0)
     poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
