@@ -83,7 +83,7 @@ def getstatus(url,backup,port,tol=1):
     peerheight=peers['height'].mode()[0]    #calculates the mode height from connected peers
     consensus=round(len(peers[abs(peers['height']-peerheight)<=tol])/total*100,2) #calculates consensus from peer height
     backupheights['Peers: '+str(connectedpeers)]='{:,.0f}'.format(peerheight)
-    backupheights['Consensus']='{:.0f}'.format(consensus)+'%'
+    backupheights['Consensus']='{:.1f}%'.format(consensus)
     backupheights=pd.DataFrame.from_dict(backupheights,orient='index')
     backupheights.columns = ['Height']
     return connectedpeers,peerheight,consensus,backupheights
@@ -372,11 +372,11 @@ def getprice(priceurl,coin,suffix='/'):
             leaveout.append(key)
         elif 'percent_change_' in key:
             if float(value)>0:
-                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))+' :arrow_down_small:'
+                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_up_small:'
             elif float(value)<0:
-                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))+' :arrow_up_small:'
+                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_down_small:'
             else:
-                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))
+                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))
             leaveout.append(key)
     for key in leaveout:
         data.pop(key, None)
