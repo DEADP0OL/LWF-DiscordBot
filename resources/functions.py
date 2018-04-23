@@ -93,7 +93,7 @@ def getheight(url):
     height = requests.get(url+'api/blocks/getHeight').json()['height']
     return height
 
-'''___________Discord API FUNCTIONS___________'''
+'''___________DISCORD API FUNCTIONS___________'''
 
 def getchannel(channelname,server):
     """returns the channel object"""
@@ -139,6 +139,15 @@ def formatmsg(message,maxlen=1990,prefix1='```',style='',prefix2='\n',suffix='\n
                 b=min(messagelen,a+maxlen)
         messages.append(prefix1+style+prefix2+message[a:b]+suffix)
     return messages
+
+def discordembeddict(dictionary,exclude=[],title='',url='',color=0x0080c0,footer=''):
+    """extracts data from dictionary as a discord embed object"""
+    embed=discord.Embed(title=title,url=url, color=color)
+    for key,result in dictionary.items():
+        if (key not in exclude):
+            embed.add_field(name=key, value=result, inline=True)
+    embed.set_footer(text=footer)
+    return embed
 
 '''__________NOTIFICATION FUNCTIONS___________'''
 
@@ -194,7 +203,7 @@ def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevio
     return delegates,missedblockmsglist
 
 def modifymissedblockmsglist(missedblockmsglist,discordnames,server):
-    """modifies the list of users to notify to ping their slack username and id"""
+    """modifies the list of users to notify to ping their discord username"""
     userlist=server.members
     newmissedblockmsglist=[]
     for i in missedblockmsglist:
@@ -224,17 +233,17 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
             if message!="":
                 message=message+"\n"
             if i["missedblocksmsg"]>blockinterval:
-                message=message+i["username"] +"still red :red_circle:"
+                message=message+i["username"] +"still red :no_entry:"
             elif i["missedblocksmsg"]>1:
-                message=message+i["username"] +"red :red_circle:"
+                message=message+i["username"] +"red :no_entry:"
             else:
                 message=message+i["username"] +"yellow :warning:"
     else:
-        redmessage=":red_circle: "
+        redmessage=":no_entry: "
         yellowmessage=":warning: "
         for i in missedblockmsglist:
             if i["missedblocksmsg"]>1:
-                if redmessage != ":red_circle: ":
+                if redmessage != ":no_entry: ":
                     redmessage+=", "+i["username"]
                 else:
                     redmessage+=i["username"]
@@ -243,9 +252,9 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
                     yellowmessage+=", "+i["username"]
                 else:
                     yellowmessage+=i["username"]
-        redmessage+=":red_circle:"
+        redmessage+=":no_entry:"
         yellowmessage+=":warning:"
-        if redmessage != ":red_circle: :red_circle:":
+        if redmessage != ":no_entry: :no_entry:":
             message=redmessage
             if yellowmessage != ":warning: :warning:":
                 message+="\n"+yellowmessage
@@ -299,19 +308,33 @@ def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=
     poolstats=poolstats.sort_values(by='rewards/day',ascending=False)
     return poolstats
 
-def printforgingpools(pools):
+def printforgingpools(pools,numdelegates=201):
     """filters the pools based on rank and groups them by sharing percentage"""
     bld='**'
     ul='__'
-    cleanpools='*`Sharing Pools (Forging)`* -'
+    cb='`'
+    it='_'
+    file='http://verifier.dutchpool.io/lwf/report.json'
+    pools=pools.loc[pools['rank']<=numdelegates]
     pools=pools.sort_values(by='rank')
-    #pools['delegate']='_#'+pools['rank'].astype(str)+'_-**'+pools['delegate']+'**'
-    pools['delegate']=ul+pools['delegate']+ul
+    try:
+        actualshare=requests.get(file).json()['delegates']
+        actualshare=pd.DataFrame.from_dict(actualshare)
+        pools=pd.merge(pools,actualshare,how='left',left_on='delegate',right_on='name')
+        pools.loc[(pools['percentage']>=0) & (pools['method']!='simple'),'delegate']=ul+pools['delegate']+ul+'-'+cb+pools['percentage'].apply(lambda x: "{:.0f}".format(x))+'%'+cb
+        pools.loc[(pools['percentage']>=0) & (pools['method']=='simple'),'delegate']=ul+pools['delegate']+ul+'-'+it+cb+pools['percentage'].apply(lambda x: "{:.0f}".format(x))+'%**'+cb+it
+        pools.loc[pools['percentage']==np.nan,'delegate']=ul+pools['delegate']+ul
+        footer='The percentage shown to the right of each delegate is an estimated sharing percentage provided by http://verifier.dutchpool.io/lwf.'
+        footer+='\n'+cb+'**'+cb+' No regular reward sharing transactions detected. Take this calculated share with a grain of salt.'
+    except:
+        pools['delegate']=ul+pools['delegate']+ul
+        footer=''
     pools=pools.groupby(['listed % share'])['delegate'].apply(', '.join).reset_index()
     pools=pools.sort_values(by='listed % share',ascending=False)
+    cleanpools='\t'+ul+bld+it+'Sharing Pools (Forging)'+it+bld+ul+'\n'
     for index,row in pools.iterrows():
-        cleanpools+=' '+bld+str(row['listed % share'])+'%'+bld+' '+row['delegate']
-    cleanpools+=' We in no way endorse any of the pools shown here and only provide the list as a help to the community. The list only reflects the information we have been provided, we cannot police the pools and voters should do their due diligence before voting.'
+        cleanpools+=bld+str(row['listed % share'])+'% Pools:'+bld+' '+row['delegate']+'\n'
+    cleanpools+=footer
     return cleanpools
 
 def printdelegates(delegates,rank,limit):
@@ -319,6 +342,7 @@ def printdelegates(delegates,rank,limit):
     delegates=delegates.loc[(delegates['rank']>=rank-limit)&(delegates['rank']<=rank+limit)]
     delegates['voteweight'] = (delegates['vote']/1000).map('{:,.0f}'.format).astype(str) + 'K'
     delegates['productivity'] = delegates['productivity'].map('{:,.1f}%'.format)
+    delegates['approval'] = delegates['approval'].map('{:,.2f}%'.format)
     ind=(delegates['rank'].values.tolist()).index(rank)
     delegates=insertblankrow(delegates,ind+1)
     cleandelegates=delegates[['rank','username','approval','voteweight','productivity']].to_string(index=False)
@@ -330,31 +354,33 @@ def getprice(priceurl,coin,suffix='/'):
     request=requests.get(url).json()
     data=request[0]
     price_usd=data['price_usd']
-    #price_btc=data['price_btc']
     leaveout=['id','last_updated','max_supply','available_supply','total_supply']
     data2=data.copy()
     for key,value in data2.items():
         if '_usd' in key:
             if float(value)>1000000:
-                data[key.replace('_usd','')]="${:,.2f}MM".format(float(value)/1000000)
+                data[key.replace('_usd',' USD')]="${:,.2f}MM".format(float(value)/1000000)
             elif float(value)>1000:
-                data[key.replace('_usd','')]="${:,.2f}K".format(float(value)/1000)
+                data[key.replace('_usd',' USD')]="${:,.2f}K".format(float(value)/1000)
             elif float(value)>1:
-                data[key.replace('_usd','')]="${:,.2f}".format(float(value))
+                data[key.replace('_usd',' USD')]="${:,.2f}".format(float(value))
             else:
-                data[key.replace('_usd','')]='$'+str(value)
+                data[key.replace('_usd',' USD')]='$'+str(value)
             leaveout.append(key)
-        if '_btc' in key:
-            data[key.replace('_btc',' (BTC)')]=str(value)+' BTC'
+        elif '_btc' in key:
+            data[key.replace('_btc',' BTC')]=str(value)+' BTC'
             leaveout.append(key)
-        if 'percent_change_' in key:
-            data[key.replace('percent_change_','')]="{0:.2f}%".format(float(value))
+        elif 'percent_change_' in key:
+            if float(value)>0:
+                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))+' :arrow_down_small:'
+            elif float(value)<0:
+                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))+' :arrow_up_small:'
+            else:
+                data[key.replace('percent_change_','Change_')]="{0:+.2f}%".format(float(value))
             leaveout.append(key)
     for key in leaveout:
         data.pop(key, None)
     pricesummary=data
-    #pricesummary=pd.DataFrame.from_dict(data,orient='index')
-    #pricesummary=pricesummary.to_string(header=False)
     return price_usd,pricesummary
 
 def insertblankrow(df,ind):
@@ -364,12 +390,3 @@ def insertblankrow(df,ind):
     result=df.iloc[:ind].append(blank,ind)
     result=result.append(df.iloc[ind:],ind)
     return result
-    
-def embedpricesummary(pricesummary):
-    """formats the pricesummary as a discord embed object"""
-    embed=discord.Embed(title=pricesummary['name'], color=0x0080c0)#+' ('+pricesummary['symbol']+')', color=0x0080c0)
-    for key,result in pricesummary.items():
-        if (key != 'name'): #and (key != 'symbol'):
-            embed.add_field(name=key, value=result, inline=True)
-    embed.set_footer(text="https://coinmarketcap.com/")
-    return embed
