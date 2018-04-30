@@ -74,26 +74,42 @@ async def delegates(ctx,limit=10):
         await bot.say(response)
 
 @bot.command(pass_context=True)
-async def rednodes(ctx):
+async def rednodes(ctx,net='mainnet'):
     """Lists delegates that are currently missing blocks."""
     assert ctx.message.channel.name in channelnames
-    delegates = pd.read_csv(delegatecsv,index_col=0)
-    delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
-    if len(missedblockmsglist)>0:
-        server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
-        userlist=server.members
-        missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,discordnames,server)
-        response=makemissedblockmsg(missedblockmsglist,0,True)
+    assert net=='mainnet' or net=='testnet'
+    if net=='testnet':
+        delegates = pd.read_csv(testdelegatecsv,index_col=0)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
+        if len(missedblockmsglist)>0:
+            server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+            userlist=server.members
+            missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,testdiscordnames,server)
+            response=makemissedblockmsg(missedblockmsglist,0,True)
+        else:
+            response = 'No red nodes'
     else:
-        response = 'No red nodes'
+        delegates = pd.read_csv(delegatecsv,index_col=0)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
+        if len(missedblockmsglist)>0:
+            server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+            userlist=server.members
+            missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,discordnames,server)
+            response=makemissedblockmsg(missedblockmsglist,0,True)
+        else:
+            response = 'No red nodes'
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
 
 @bot.command(pass_context=True)
-async def height(ctx):
-    """Provides the current height accross core blockchain nodes."""
+async def height(ctx,net='mainnet'):
+    """Provides the current height accross mainnet or testnet nodes."""
     assert ctx.message.channel.name in channelnames
-    connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
+    assert net=='mainnet' or net=='testnet'
+    if net=='testnet':
+        connectedpeers,peerheight,consensus,backupheights=getstatus(testurl,testbackup,testport)
+    else:
+        connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
     response=repr(backupheights)
     for response in formatmsg(response):
         await bot.say(response)
