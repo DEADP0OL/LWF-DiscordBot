@@ -22,5 +22,12 @@
             ],
     "numdelegates":201,
     "blockrewards":5,
-    "blockspermin":4
+    "blockspermin":4,
+    "testapinode":"https://twallet.lwf.io/",
+    "testbackupnodes":[
+            ],
+    "testchannels":[
+            "lwf_bot"
+            ],
+    "testport":"18101"
 }
