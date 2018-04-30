@@ -1,6 +1,6 @@
 from resources.functions import *
 #obtain config variables
-apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('resources/config.json')
+apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport=getconfigs('resources/config.json')
 delegatesnew=getdelegates(url)
 try:
     delegates = pd.read_csv("files/delegates.csv",index_col=0)
