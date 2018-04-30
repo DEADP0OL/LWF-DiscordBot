@@ -10,7 +10,9 @@ help_command = example_command.replace('help, ','')
 description='A bot with scripts to analyze the LWF blockchain in addition to other relevant dynamic information. Use commands in conjunction with a direct bot mention or the command prefix "?".'
 poolstxtfile="files/pools.txt"
 delegatecsv="files/delegates.csv"
+testdelegatecsv="files/testnet-delegates.csv"
 discordnames=getusernames('resources/discordnames.json')
+testdiscordnames=getusernames('resources/testnet-discordnames.json')
 msglimit=1800
 priceurl='https://api.coinmarketcap.com/v1/ticker/'
 
