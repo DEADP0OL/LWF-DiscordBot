@@ -3,7 +3,7 @@
 from resources.functions import *
 
 '''obtain config variables and initiate slack client'''
-apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin=getconfigs('resources/config.json')
+apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport=getconfigs('resources/config.json')
 command='?'
 example_command = "help, price, delegate, delegates, rednodes, height, pools, forgingpools"
 help_command = example_command.replace('help, ','')
