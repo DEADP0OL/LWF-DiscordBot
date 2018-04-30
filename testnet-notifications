@@ -8,8 +8,9 @@ except FileNotFoundError:
     delegates=None
     print("Counters Initialized")
 delegates=processdelegates(delegatesnew,delegates)
-delegates,missedblockmsglist=makemissedblockmsglist(delegates,blockinterval,minmissedblocks)
+#delegates,missedblockmsglist=makemissedblockmsglist(delegates,blockinterval,minmissedblocks)
 delegates.to_csv('files/testnet-delegates.csv')
+'''
 if len(missedblockmsglist)>0:
     client = discord.Client()
     @client.event
@@ -24,3 +25,4 @@ if len(missedblockmsglist)>0:
             await client.send_message(getuser(username,server), message)
         client.close()
     client.run(apitoken)
+'''
