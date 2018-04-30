@@ -25,7 +25,10 @@ def getconfigs(file):
     numdelegates = configs.get("numdelegates")
     blockrewards = configs.get("blockrewards")
     blockspermin = configs.get("blockspermin")
-    return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin
+    testurl = configs.get("testapinode")
+    testbackup = configs.get("testbackupnodes")
+    testport=configs.get("testport")
+    return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport
 
 def cleanurl(url,port):
     """removes url components to display node""" 
