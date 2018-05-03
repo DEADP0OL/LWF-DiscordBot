@@ -30,10 +30,10 @@ async def help(ctx):
     """Describes the bot and it's available commands."""
     assert ctx.message.channel.name in channelnames
     commands = {command+'help':"Describes the bot and it's available commands.",
-                command+'price (<coin name>)':'Retrieves price data for the specified coin. Defaults to LWF',
+                command+'price (<coin name>)':'Retrieves price data for the specified coin. Defaults to LWF.',
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate.',
                 command+'delegates (<rank>)':'Returns the delegate list in order of rank. Defaults to rank 201.',
-                command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks.',
+                command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
                 command+'pools':'Returns a list of delegates that share earnings to voters.',
                 command+'forgingpools':'Returns the pools list filtered down to the current forging delegates.'
