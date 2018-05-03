@@ -25,6 +25,9 @@
     "blockspermin":4,
     "testapinode":"https://twallet.lwf.io/",
     "testbackupnodes":[
+            "http://testnode1.lwf.io:18101/",
+            "http://testnode2.lwf.io:18101/",
+            "http://testnode3.lwf.io:18101/"
             ],
     "testchannels":[
             "lwf_bot"
