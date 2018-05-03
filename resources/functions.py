@@ -5,6 +5,7 @@ import json
 import re
 import time
 import discord
+import asyncio
 from discord.ext import commands
 from collections import defaultdict
 
@@ -143,12 +144,12 @@ def formatmsg(message,maxlen=1990,prefix1='```',style='',prefix2='\n',suffix='\n
         messages.append(prefix1+style+prefix2+message[a:b]+suffix)
     return messages
 
-def discordembeddict(dictionary,exclude=[],title='',url='',color=0x0080c0,footer=''):
+def discordembeddict(dictionary,exclude=[],title='',url='',color=0x0080c0,footer='',inline=True):
     """extracts data from dictionary as a discord embed object"""
     embed=discord.Embed(title=title,url=url, color=color)
     for key,result in dictionary.items():
         if (key not in exclude):
-            embed.add_field(name=key, value=result, inline=True)
+            embed.add_field(name=key, value=result, inline=inline)
     embed.set_footer(text=footer)
     return embed
 
@@ -269,23 +270,7 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
 
 def getpools(file):
     """parses pools from raw string stored in a local file"""
-    pfile = open(file, 'r')
-    pools = pfile.read()
-    pfile.close
-    pools = pools.replace('`','').lower()
-    pools = max(pools.split('*'), key=len).split(';')
-    pools = pd.DataFrame(pools,columns=['string'])
-    pools['string'].str.lower()
-    pools = pools['string'].str.extractall(r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$')
-    dropcols=['coin']
-    pools=pools.drop(dropcols,axis=1)
-    pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = np.nan
-    pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = 2
-    pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = 7
-    pools.loc[pools['listed_frequency']=='d', ['listed_frequency']] = 1
-    pools['listed_frequency']=pd.to_numeric(pools['listed_frequency'])
-    pools['min_payout']=pd.to_numeric(pools['min_payout'])
-    pools.rename(columns={'percentage': 'listed % share'}, inplace=True)
+    pools=poolsstringtodf(file)
     pools=pd.melt(pools, id_vars=['listed % share','listed_frequency','min_payout','website'], var_name='delegatenumber', value_name='delegate')
     del pools['delegatenumber']
     pools=pools.loc[pools['delegate'].notnull()]
@@ -356,17 +341,22 @@ def getprice(priceurl,coin,suffix='/'):
     url=priceurl+coin.lower()+suffix
     request=requests.get(url).json()
     data=request[0]
-    price_usd=data['price_usd']
     leaveout=['id','last_updated','max_supply','available_supply','total_supply']
     data2=data.copy()
     for key,value in data2.items():
         if '_usd' in key:
             if float(value)>1000000:
                 data[key.replace('_usd',' USD')]="${:,.2f}MM".format(float(value)/1000000)
-            elif float(value)>1000:
+            elif float(value)>10000:
                 data[key.replace('_usd',' USD')]="${:,.2f}K".format(float(value)/1000)
+            elif float(value)>1000:
+                data[key.replace('_usd',' USD')]="${:,.0f}".format(float(value))
             elif float(value)>1:
                 data[key.replace('_usd',' USD')]="${:,.2f}".format(float(value))
+            elif float(value)>.1:
+                data[key.replace('_usd',' USD')]="${:,.3f}".format(float(value))
+            elif float(value)>.01:
+                data[key.replace('_usd',' USD')]="${:,.4f}".format(float(value))
             else:
                 data[key.replace('_usd',' USD')]='$'+str(value)
             leaveout.append(key)
@@ -383,6 +373,7 @@ def getprice(priceurl,coin,suffix='/'):
             leaveout.append(key)
     for key in leaveout:
         data.pop(key, None)
+    price_usd=data['price USD']
     pricesummary=data
     return price_usd,pricesummary
 
@@ -393,3 +384,77 @@ def insertblankrow(df,ind):
     result=df.iloc[:ind].append(blank,ind)
     result=result.append(df.iloc[ind:],ind)
     return result
+
+def poolsdftojson(poolsdf):
+    """Converts a dataframe to JSON format for storage"""
+    poolsdf=poolsdf.sort_values(by='listed % share',ascending=False)
+    poolsjson=poolsdf.to_json(orient='records')
+    with open('files/pools.json', 'w') as f:
+        f.write(poolsjson)
+    return poolsjson
+
+def poolsjsontostring(poolsjson):
+    """Converts a string in JSON format to a string for communication"""
+    poolsstring=''
+    poolsjson=json.loads(poolsjson)
+    for i in poolsjson:
+        number = 0
+        pool=''
+        for key,value in i.items():
+            if (value is not None) and 'delegate' in key:
+                if pool=='':
+                    pool+=value
+                else:
+                    pool+=', '+value
+                number+=1
+        value=i.get('website')
+        if value is not None:
+            pool+=' '+value
+        pool+=' ('
+        value=i.get('listed % share')
+        if value is not None:
+            if number > 1:
+                pool+=str(number)+'x'+str(value)+'%'
+            else:
+                pool+=str(value)+'%'
+
+        value=i.get('listed_frequency')
+        if value is not None:
+            if value==1:
+                pool+='-d'
+            elif value==7:
+                pool+='-w'
+            else:
+                pool+='-'+str(value)+'d'
+        value=i.get('min_payout')
+        if value is not None:
+            if value == 1.0:
+                pool+=' min payout '+str(int(value))
+            else:
+                pool+=' min payout '+str(value)
+        pool+='); '
+        poolsstring+=pool
+    with open('files/poolstest.txt', 'w') as f:
+        f.write(poolsstring)
+    return poolsstring
+
+def poolsstringtodf(file):
+    """opens a text file and interprets the data as a dataframe"""
+    pfile = open(file, 'r')
+    pools = pfile.read()
+    pfile.close
+    pools = pools.replace('`','').lower()
+    pools = max(pools.split('*'), key=len).split(';')
+    pools = pd.DataFrame(pools,columns=['string'])
+    pools['string'].str.lower()
+    pools = pools['string'].str.extractall(r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$')
+    pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = np.nan
+    pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = 2
+    pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = 7
+    pools.loc[pools['listed_frequency']=='d', ['listed_frequency']] = 1
+    pools['listed_frequency']=pd.to_numeric(pools['listed_frequency'])
+    pools['min_payout']=pd.to_numeric(pools['min_payout'])
+    pools.rename(columns={'percentage': 'listed % share'}, inplace=True)
+    dropcols=['coin']
+    pools=pools.drop(dropcols,axis=1)
+    return pools
