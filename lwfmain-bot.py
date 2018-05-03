@@ -5,9 +5,6 @@ from resources.functions import *
 '''obtain config variables and initiate slack client'''
 apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport=getconfigs('resources/config.json')
 command='?'
-example_command = "help, price, delegate, delegates, rednodes, height, pools, forgingpools"
-help_command = example_command.replace('help, ','')
-description='A bot with scripts to analyze the LWF blockchain in addition to other relevant dynamic information. Use commands in conjunction with a direct bot mention or the command prefix "?".'
 poolstxtfile="files/pools.txt"
 delegatecsv="files/delegates.csv"
 testdelegatecsv="files/testnet-delegates.csv"
@@ -16,7 +13,8 @@ testdiscordnames=getusernames('resources/testnet-discordnames.json')
 msglimit=1800
 priceurl='https://api.coinmarketcap.com/v1/ticker/'
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or(command), description=description)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(command))
+bot.remove_command('help')
 
 @bot.event
 async def on_ready():
@@ -26,6 +24,24 @@ async def on_ready():
     server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
     print(server)
     print('------')
+
+@bot.command(pass_context=True)
+async def help(ctx):
+    """Describes the bot and it's available commands."""
+    assert ctx.message.channel.name in channelnames
+    commands = {command+'help':"Describes the bot and it's available commands.",
+                command+'price (<coin name>)':'Retrieves price data for the specified coin. Defaults to LWF',
+                command+'delegate (<username> or <rank>)':'Provides information of a delegate.',
+                command+'delegates (<rank>)':'Returns the delegate list in order of rank. Defaults to rank 201.',
+                command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks.',
+                command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
+                command+'pools':'Returns a list of delegates that share earnings to voters.',
+                command+'forgingpools':'Returns the pools list filtered down to the current forging delegates.'
+                }
+    description='Available commands include:'
+    embed=discordembeddict(commands,title=description,exclude=['?help'],inline=False)
+    await bot.say(embed=embed)
+    return
 
 @bot.command(pass_context=True)
 async def price(ctx,coin='lwf'):
@@ -40,7 +56,7 @@ async def price(ctx,coin='lwf'):
         return
 
 @bot.command(pass_context=True)
-async def delegate(ctx,delegate='',limit=10):
+async def delegate(ctx,delegate='',limit=5):
     """Filters the delegate list by name or rank. Ex: ?delegate deadpool"""
     assert ctx.message.channel.name in channelnames
     delegates = pd.read_csv(delegatecsv,index_col=0)
@@ -118,7 +134,7 @@ async def height(ctx,net='mainnet'):
 
 @bot.command(pass_context=True)
 async def pools(ctx):
-    """Returns the pools list."""
+    """Returns a list of delegates that share earnings to voters."""
     assert ctx.message.channel.name in channelnames
     file= open(poolstxtfile,"r")
     response=file.read()
@@ -137,5 +153,27 @@ async def forgingpools(ctx):
     for response in formatmsg(response,msglimit,'','','','',['\n']):
         await bot.say(response)
 
+async def price_loop():
+    await bot.wait_until_ready()
+    await asyncio.sleep(1)
+    coin = 'bitcoin'
+    price,pricesummary=getprice(priceurl, coin)
+    last_price=-2
+    while not bot.is_closed:
+        price,pricesummary=getprice(priceurl, coin)
+        if price != last_price:
+            last_price = price
+            change=pricesummary['Change 24h']
+            change=change.replace(' :arrow_up_small:','')
+            change=change.replace(' :arrow_down_small:','')
+            await bot.change_presence(
+                afk=True,
+                status=discord.Status.invisible,
+                game=discord.Game(name='Price: '+price+' ('+change+')', url="https://coinmarketcap.com/currencies/"+coin, type=3)
+                #game=discord.Game(name=pricesummary['symbol']+' Price: '+price, url="https://coinmarketcap.com/currencies/"+coin, type=3)
+                )
+        await asyncio.sleep(900)
+
 if __name__ == '__main__':
+    bot.loop.create_task(price_loop())
     bot.run(apitoken)
