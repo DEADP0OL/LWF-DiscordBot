@@ -169,7 +169,7 @@ async def price_loop():
             await bot.change_presence(
                 afk=True,
                 status=discord.Status.invisible,
-                game=discord.Game(name='Price: '+price+' ('+change+')', url="https://coinmarketcap.com/currencies/"+coin, type=3)
+                game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', url="https://coinmarketcap.com/currencies/"+coin, type=3)
                 #game=discord.Game(name=pricesummary['symbol']+' Price: '+price, url="https://coinmarketcap.com/currencies/"+coin, type=3)
                 )
         await asyncio.sleep(900)
