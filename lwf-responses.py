@@ -28,11 +28,13 @@ async def on_ready():
 @bot.command(pass_context=True)
 async def help(ctx):
     """Describes the bot and it's available commands."""
-    assert ctx.message.channel.name in channelnames
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
     commands = {command+'help':"Describes the bot and it's available commands.",
                 command+'price (<coin name>)':'Retrieves price data for the specified coin. Defaults to LWF.',
-                command+'delegate (<username> or <rank>)':'Provides information of a delegate.',
-                command+'delegates (<rank>)':'Returns the delegate list in order of rank. Defaults to rank 201.',
+                command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
                 command+'pools':'Returns a list of delegates that share earnings to voters.',
@@ -44,21 +46,28 @@ async def help(ctx):
     return
 
 @bot.command(pass_context=True)
-async def price(ctx,coin='lwf'):
+async def price(ctx,coin='lwf',conv=''):
     """Retrieves price data for a specified coin. Ex: ?price bitcoin"""
-    assert ctx.message.channel.name in channelnames
     try:
-        price,pricesummary=getprice(priceurl, coin)
-        embed=discordembeddict(pricesummary,['name'],pricesummary['name'],"https://coinmarketcap.com/currencies/"+coin)
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
+    try:
+        price,pricesummary=getprice(priceurl, coin, conv)
+        embed=discordembeddict(pricesummary,['name','symbol','rank','market_cap USD'],pricesummary['name']+' ('+pricesummary['symbol']+')')
+        #embed.set_image(url="https://cryptohistory.org/charts/light/"+pricesummary['symbol']+"-usd/7d/png")
         await bot.say(embed=embed)
     except:
         await bot.say('Command incorrect, try '+command+'price bitcoin')
         return
 
 @bot.command(pass_context=True)
-async def delegate(ctx,delegate='',limit=5):
+async def delegate(ctx,delegate='201',limit=3):
     """Filters the delegate list by name or rank. Ex: ?delegate deadpool"""
-    assert ctx.message.channel.name in channelnames
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
     delegates = pd.read_csv(delegatecsv,index_col=0)
     try:
         if delegate=='':
@@ -80,25 +89,23 @@ async def delegate(ctx,delegate='',limit=5):
         return
     for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
         await bot.say(response)
-    
-@bot.command(pass_context=True)
-async def delegates(ctx,limit=10):
-    """Returns the delegate list in order of rank."""
-    assert ctx.message.channel.name in channelnames
-    rank=numdelegates
-    delegates = pd.read_csv(delegatecsv,index_col=0)
-    response=printdelegates(delegates,rank,limit)
-    for response in formatmsg(response,msglimit,'```','','\n','\n```',seps=['\n']):
-        await bot.say(response)
 
 @bot.command(pass_context=True)
 async def rednodes(ctx,net='mainnet'):
     """Lists delegates that are currently missing blocks."""
-    assert ctx.message.channel.name in channelnames
-    assert net=='mainnet' or net=='testnet'
-    if net=='testnet':
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
+    try:
+        assert net.lower()=='mainnet' or net.lower()=='testnet'
+    except AssertionError:
+        response = 'Network input incorrect. Should be "mainnet" or "testnet".'
+        await bot.say(response)
+        return
+    if net.lower()=='testnet':
         delegates = pd.read_csv(testdelegatecsv,index_col=0)
-        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True,numdelegates)
         if len(missedblockmsglist)>0:
             server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
             userlist=server.members
@@ -108,7 +115,7 @@ async def rednodes(ctx,net='mainnet'):
             response = 'No red nodes'
     else:
         delegates = pd.read_csv(delegatecsv,index_col=0)
-        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True,numdelegates)
         if len(missedblockmsglist)>0:
             server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
             userlist=server.members
@@ -122,9 +129,17 @@ async def rednodes(ctx,net='mainnet'):
 @bot.command(pass_context=True)
 async def height(ctx,net='mainnet'):
     """Provides the current height accross mainnet or testnet nodes."""
-    assert ctx.message.channel.name in channelnames
-    assert net=='mainnet' or net=='testnet'
-    if net=='testnet':
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
+    try:
+        assert net.lower()=='mainnet' or net.lower()=='testnet'
+    except AssertionError:
+        response = 'Network input incorrect. Should be "mainnet" or "testnet".'
+        await bot.say(response)
+        return
+    if net.lower()=='testnet':
         connectedpeers,peerheight,consensus,backupheights=getstatus(testurl,testbackup,testport)
     else:
         connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
@@ -135,7 +150,10 @@ async def height(ctx,net='mainnet'):
 @bot.command(pass_context=True)
 async def pools(ctx):
     """Returns a list of delegates that share earnings to voters."""
-    assert ctx.message.channel.name in channelnames
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
     file= open(poolstxtfile,"r")
     response=file.read()
     file.close
@@ -145,7 +163,10 @@ async def pools(ctx):
 @bot.command(pass_context=True)
 async def forgingpools(ctx):
     """Returns the pools list filtered down to forging delegates."""
-    assert ctx.message.channel.name in channelnames
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
     pools= getpools(poolstxtfile)
     delegates = pd.read_csv(delegatecsv,index_col=0)
     poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
@@ -154,6 +175,7 @@ async def forgingpools(ctx):
         await bot.say(response)
 
 async def price_loop():
+    """Updates bot presence with current coin price."""
     await bot.wait_until_ready()
     await asyncio.sleep(1)
     coin = 'bitcoin'
@@ -163,16 +185,20 @@ async def price_loop():
         price,pricesummary=getprice(priceurl, coin)
         if price != last_price:
             last_price = price
+            rank=pricesummary['rank']
             change=pricesummary['Change 24h']
             change=change.replace(' :arrow_up_small:','')
             change=change.replace(' :arrow_down_small:','')
             await bot.change_presence(
                 afk=True,
                 status=discord.Status.invisible,
-                game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', url="https://coinmarketcap.com/currencies/"+coin, type=3)
-                #game=discord.Game(name=pricesummary['symbol']+' Price: '+price, url="https://coinmarketcap.com/currencies/"+coin, type=3)
+                game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
                 )
         await asyncio.sleep(900)
+        
+async def mainnet_loop():
+    await bot.wait_until_ready()
+    await asyncio.sleep(1)
 
 if __name__ == '__main__':
     bot.loop.create_task(price_loop())
