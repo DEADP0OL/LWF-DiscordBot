@@ -192,11 +192,11 @@ def checknames(name):
             names.append(name.replace(x,y))
     return names
 
-def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevious=False):
+def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevious=False,numdelegates=201):
     """creates a list of delegates that have missed blocks. When includeprevious is False, 
     it will only include delegates that have either not previously been notified or have exceeded the blockinterval"""
     missedblockmsglist=[]
-    for index, row in delegates.loc[delegates['newmissedblocks']>=minmissedblocks].iterrows():
+    for index, row in delegates.loc[(delegates['newmissedblocks']>=minmissedblocks)&(delegates['rank']<=numdelegates)].iterrows():
         if includeprevious is False:
             if (row['newmissedblocks']>row['missedblocksmsg'])and((row['missedblocksmsg']<=1)or(row['newmissedblocks']-row['missedblocksmsg']>blockinterval)):
                 missedblockmsglist.append({"username":row['username'],"missedblocksmsg":row['newmissedblocks']})
@@ -336,12 +336,16 @@ def printdelegates(delegates,rank,limit):
     cleandelegates=delegates[['rank','username','approval','voteweight','productivity']].to_string(index=False)
     return cleandelegates
 
-def getprice(priceurl,coin,suffix='/'):
+def getprice(priceurl,coin,conv='',suffix='/'):
     """retrieves the price data for a specified coin"""
-    url=priceurl+coin.lower()+suffix
+    if conv =='':
+        url=priceurl+coin.lower()+suffix
+        leaveout=['id','last_updated','max_supply','available_supply','total_supply']
+    else:
+        url=priceurl+coin.lower()+suffix+'?convert='+conv
+        leaveout=['id','last_updated','max_supply','available_supply','total_supply','price USD','24h_volume USD','Change 1h','Change 24h','Change 7d']
     request=requests.get(url).json()
     data=request[0]
-    leaveout=['id','last_updated','max_supply','available_supply','total_supply']
     data2=data.copy()
     for key,value in data2.items():
         if '_usd' in key:
@@ -361,7 +365,20 @@ def getprice(priceurl,coin,suffix='/'):
                 data[key.replace('_usd',' USD')]='$'+str(value)
             leaveout.append(key)
         elif '_btc' in key:
-            data[key.replace('_btc',' BTC')]=str(value)+' BTC'
+            if float(value)>10000:
+                data[key.replace('_btc',' BTC')]="{:,.2f}K BTC".format(float(value)/1000)
+            elif float(value)>1000:
+                data[key.replace('_btc',' BTC')]="{:,.0f} BTC".format(float(value))
+            else:
+                data[key.replace('_btc',' BTC')]="{:,.3f} BTC".format(float(value))
+            leaveout.append(key)
+        elif (conv.upper()!='BTC')and(conv!='')and('_'+conv.lower() in key):
+            if float(value)>10000:
+                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.2f}K".format(float(value)/1000)+' '+conv.upper()
+            elif float(value)>1000:
+                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.0f}".format(float(value))+' '+conv.upper()
+            else:
+                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.3f}".format(float(value))+' '+conv.upper()
             leaveout.append(key)
         elif 'percent_change_' in key:
             if float(value)>0:
@@ -371,11 +388,18 @@ def getprice(priceurl,coin,suffix='/'):
             else:
                 data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))
             leaveout.append(key)
+    if conv=='':
+        price=data['price USD']
+    elif conv.upper()!='BTC':
+        field='price '+conv.upper()
+        price=data[field]
+        leaveout.append('price BTC')
+    else:
+        price=data['price BTC']
     for key in leaveout:
         data.pop(key, None)
-    price_usd=data['price USD']
     pricesummary=data
-    return price_usd,pricesummary
+    return price,pricesummary
 
 def insertblankrow(df,ind):
     """inserts a blank row into a dataframe at the specified index"""
