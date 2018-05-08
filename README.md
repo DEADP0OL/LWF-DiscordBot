@@ -38,16 +38,22 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 - discordapitoken: The apitoken assigned to your bot
 - apinode: The public node url or ip address for api requests (default https://wallet.lwf.io/)
-- backupnodes: A list of nodes with api access to reach
+- backupnodes: A list of nodes with api access to monitor
 - port: port number for api access
 - blockintervalnotification: The number of consecutive blocks required to reissue a notifications
 - minmissedblocks: The number of consecutive missed blocks required for an initial notification
-- server: The discord server to use for notifications and responses
-- channels: A list of channels to broadcast nofications on
-- users: A list of users to send direct messages of notifications to
 - numdelegates: The number of forging delegates on the blockchain
 - blockrewards: The reward quantity for forging a block on the blockchain
 - blockspermin: The number of blocks forged per a minute on the blockchain
+- notificationmins: The number of minutes to update delegate information for mainnet and testnet
+- commandprefix: The character prefix for each bot function for the bot to listen for
+- server: The discord server to use for notifications and responses
+- channels: A list of channels to broadcast nofications on
+- users: A list of users to send direct messages of notifications to
+- testapinode: The public node url or ip address for api requests (default https://wallet.lwf.io/)
+- testbackupnodes: A list of nodes with api access to monitor
+- testport: port number for api access
+- testchannels: A list of channels to broadcast testnet nofications on
 
 ## Activation
 
