@@ -3,8 +3,8 @@
 from resources.functions import *
 
 '''obtain config variables and initiate slack client'''
-apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport=getconfigs('resources/config.json')
-command='?'
+apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,notificationmins,commandprefix=getconfigs('resources/config.json')
+command=commandprefix
 poolstxtfile="files/pools.txt"
 delegatecsv="files/delegates.csv"
 testdelegatecsv="files/testnet-delegates.csv"
@@ -33,12 +33,16 @@ async def help(ctx):
     except AssertionError:
         return
     commands = {command+'help':"Describes the bot and it's available commands.",
-                command+'price (<coin name>)':'Retrieves price data for the specified coin. Defaults to LWF.',
+                command+'price (<coin name>) (<currency>)':'Retrieves price data for the specified coin. Defaults to LWF and USD.',
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
-                command+'pools':'Returns a list of delegates that share earnings to voters.',
-                command+'forgingpools':'Returns the pools list filtered down to the current forging delegates.'
+                command+'pools (list/forging/errors)':('Provides details about public sharing pools. Defaults to raw.'
+                               '\n\t**raw** - Returns the entire sharing pool list with all details.'
+                               '\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
+                               '\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
+                               )
+
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=['?help'],inline=False)
@@ -46,7 +50,7 @@ async def help(ctx):
     return
 
 @bot.command(pass_context=True)
-async def price(ctx,coin='lwf',conv=''):
+async def price(ctx,coin='local world forwarders',conv=''):
     """Retrieves price data for a specified coin. Ex: ?price bitcoin"""
     try:
         assert ctx.message.channel.name in channelnames
@@ -148,31 +152,47 @@ async def height(ctx,net='mainnet'):
         await bot.say(response)
 
 @bot.command(pass_context=True)
-async def pools(ctx):
+async def pools(ctx,form='raw'):
     """Returns a list of delegates that share earnings to voters."""
     try:
         assert ctx.message.channel.name in channelnames
     except AssertionError:
         return
-    file= open(poolstxtfile,"r")
-    response=file.read()
-    file.close
-    for response in formatmsg(response,msglimit,'','','',''):
-        await bot.say(response)
-
-@bot.command(pass_context=True)
-async def forgingpools(ctx):
-    """Returns the pools list filtered down to forging delegates."""
+    validargs=['list','raw','forging','errors']
     try:
-        assert ctx.message.channel.name in channelnames
+        assert form.lower() in validargs
     except AssertionError:
-        return
-    pools= getpools(poolstxtfile)
-    delegates = pd.read_csv(delegatecsv,index_col=0)
-    poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
-    response=printforgingpools(poolstats)
-    for response in formatmsg(response,msglimit,'','','','',['\n']):
+        response = 'Pool input incorrect. Should be "raw", "list", or "forging".'
         await bot.say(response)
+        return
+    if form.lower()=='raw':
+        file= open(poolstxtfile,"r")
+        response=file.read()
+        file.close
+        for response in formatmsg(response,msglimit,'','','',''):
+            await bot.say(response)
+    elif form.lower()=='list':
+        pools,poolerrors= getpools(poolstxtfile)
+        delegates = pd.read_csv(delegatecsv,index_col=0)
+        poolstats=getpoolstats(pools,delegates,5000,blockrewards,blockspermin)
+        response=printforgingpools(poolstats,5000)
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
+    elif form.lower()=='forging':
+        pools,poolerrors= getpools(poolstxtfile)
+        delegates = pd.read_csv(delegatecsv,index_col=0)
+        poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
+        response=printforgingpools(poolstats)
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
+    elif form.lower()=='errors':
+        pools,poolerrors= getpools(poolstxtfile)
+        if len(poolerrors)>0:
+            response=poolerrors.to_string(index=False)
+        else:
+            response='No errors'
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
 
 async def price_loop():
     """Updates bot presence with current coin price."""
@@ -194,12 +214,49 @@ async def price_loop():
                 status=discord.Status.invisible,
                 game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
                 )
-        await asyncio.sleep(900)
+        await asyncio.sleep(notificationmins*60)
         
 async def mainnet_loop():
+    """Updates the mainnet delegate list and notifies if delegates miss blocks."""
     await bot.wait_until_ready()
     await asyncio.sleep(1)
+    while not bot.is_closed:
+        delegatesnew=getdelegates(url)
+        try:
+            delegates = pd.read_csv(delegatecsv,index_col=0)
+        except FileNotFoundError:
+            delegates=None
+        delegates=processdelegates(delegatesnew,delegates)
+        delegates,missedblockmsglist=makemissedblockmsglist(delegates,blockinterval,minmissedblocks,numdelegates=numdelegates)
+        delegates.to_csv(delegatecsv)
+        if len(missedblockmsglist)>0:
+                discordnames=getusernames('resources/discordnames.json')
+                server = discord.utils.find(lambda m: (m.name).lower() == servername, bot.servers)
+                newmissedblockmsglist=modifymissedblockmsglist(missedblockmsglist,discordnames,server)
+                message=makemissedblockmsg(newmissedblockmsglist,blockinterval)
+                for channelname in channelnames:
+                    await bot.send_message(getchannel(channelname,server), message)
+                for username in usernames:
+                    await bot.send_message(getuser(username,server), message)
+        await asyncio.sleep(notificationmins*60)
+
+async def testnet_loop():
+    """Updates the testnet delegate list."""
+    await bot.wait_until_ready()
+    await asyncio.sleep(1)
+    while not bot.is_closed:
+        testdelegatesnew=getdelegates(testurl)
+        try:
+            testdelegates = pd.read_csv(testdelegatecsv,index_col=0)
+        except FileNotFoundError:
+            testdelegates=None
+        testdelegates=processdelegates(testdelegatesnew,testdelegates)
+        testdelegates,testmissedblockmsglist=makemissedblockmsglist(testdelegates,blockinterval,minmissedblocks,numdelegates=numdelegates)
+        testdelegates.to_csv(testdelegatecsv)
+        await asyncio.sleep(notificationmins*60)
 
 if __name__ == '__main__':
     bot.loop.create_task(price_loop())
+    bot.loop.create_task(mainnet_loop())
+    bot.loop.create_task(testnet_loop())
     bot.run(apitoken)
