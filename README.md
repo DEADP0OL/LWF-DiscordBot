@@ -11,11 +11,11 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Responses
 
-- price (*<coin name>*) (*<currency>*) - Retrieves price data for the specified coin. Defaults to LWF and USD.
-- delegate (*<username> or <rank>*) - Provides information of a delegate. Defaults to rank 201.
-- height (*mainnet/testnet*) - Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.
-- rednodes (*mainnet/testnet*) - Lists delegates that are currently missing blocks. Defaults to mainnet.
-- pools (*raw/list/forging*)- Provides details about public sharing pools. Defaults to raw.
+- price (<coin name>) (<currency>) - Retrieves price data for the specified coin. Defaults to LWF and USD.
+- delegate (<username> or <rank>) - Provides information of a delegate. Defaults to rank 201.
+- height (mainnet/testnet) - Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.
+- rednodes (mainnet/testnet) - Lists delegates that are currently missing blocks. Defaults to mainnet.
+- pools (raw/list/forging)- Provides details about public sharing pools. Defaults to raw.
   - raw - Pools list filtered to currently forging pools
   - list - Returns an list of pools grouped by their sharing percentage.
   - forging - Returns the pools list filtered down to the current forging delegates.
