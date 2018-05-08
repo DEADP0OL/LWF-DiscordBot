@@ -14,15 +14,17 @@
     "port":"18124",
     "blockintervalnotification":15000,
     "minmissedblocks":2,
+    "numdelegates":201,
+    "blockrewards":5,
+    "blockspermin":4,
+    "notificationmins":15,
+    "commandprefix":"?",
     "server":"lwf.io",
     "channels":[
             "lwf_bot"
             ],
     "users":[
             ],
-    "numdelegates":201,
-    "blockrewards":5,
-    "blockspermin":4,
     "testapinode":"https://twallet.lwf.io/",
     "testbackupnodes":[
             "http://testnode1.lwf.io:18101/",
