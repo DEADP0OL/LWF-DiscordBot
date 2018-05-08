@@ -29,7 +29,9 @@ def getconfigs(file):
     testurl = configs.get("testapinode")
     testbackup = configs.get("testbackupnodes")
     testport=configs.get("testport")
-    return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport
+    notificationmins=configs.get("notificationmins")
+    commandprefix=configs.get("commandprefix")
+    return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,notificationmins,commandprefix
 
 def cleanurl(url,port):
     """removes url components to display node""" 
@@ -270,14 +272,14 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
 
 def getpools(file):
     """parses pools from raw string stored in a local file"""
-    pools=poolsstringtodf(file)
+    pools,poolerrors=poolsstringtodf(file)
     pools=pd.melt(pools, id_vars=['listed % share','listed_frequency','min_payout','website'], var_name='delegatenumber', value_name='delegate')
     del pools['delegatenumber']
     pools=pools.loc[pools['delegate'].notnull()]
     pools=pools.reset_index(drop=True)
     pools['listed % share']=pd.to_numeric(pools['listed % share'])
     pools=pools.sort_values(by='listed % share',ascending=False)
-    return pools
+    return pools,poolerrors
 
 def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=10000):
     """merges pool data with current delegate api results"""
@@ -338,6 +340,7 @@ def printdelegates(delegates,rank,limit):
 
 def getprice(priceurl,coin,conv='',suffix='/'):
     """retrieves the price data for a specified coin"""
+    coin=coin.replace(' ','-')
     if conv =='':
         url=priceurl+coin.lower()+suffix
         leaveout=['id','last_updated','max_supply','available_supply','total_supply']
@@ -434,7 +437,7 @@ def poolsjsontostring(poolsjson):
         value=i.get('website')
         if value is not None:
             pool+=' '+value
-        pool+=' ('
+        pool+=' (`'
         value=i.get('listed % share')
         if value is not None:
             if number > 1:
@@ -450,12 +453,15 @@ def poolsjsontostring(poolsjson):
                 pool+='-w'
             else:
                 pool+='-'+str(value)+'d'
+        pool+='`'
         value=i.get('min_payout')
         if value is not None:
             if value == 1.0:
-                pool+=' min payout '+str(int(value))
+                pool+=', min payout '+str(int(value))
+            elif value == 2.0:
+                pool+=', min payout '+str(int(value))
             else:
-                pool+=' min payout '+str(value)
+                pool+=', min payout '+str(value)
         pool+='); '
         poolsstring+=pool
     with open('files/poolstest.txt', 'w') as f:
@@ -463,6 +469,7 @@ def poolsjsontostring(poolsjson):
     return poolsstring
 
 def poolsstringtodf(file):
+    rgex=r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$'
     """opens a text file and interprets the data as a dataframe"""
     pfile = open(file, 'r')
     pools = pfile.read()
@@ -470,8 +477,12 @@ def poolsstringtodf(file):
     pools = pools.replace('`','').lower()
     pools = max(pools.split('*'), key=len).split(';')
     pools = pd.DataFrame(pools,columns=['string'])
-    pools['string'].str.lower()
-    pools = pools['string'].str.extractall(r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$')
+    pools['string'] = pools['string'].str.lower()
+    poolerrors=pools
+    poolerrors['match']=poolerrors['string'].str.findall(rgex)
+    poolerrors=poolerrors.loc[(poolerrors['string']!='')&(poolerrors['string']!=' ')]
+    poolerrors=poolerrors.loc[poolerrors.match.str.len()==0,'string']
+    pools = pools['string'].str.extractall(rgex)
     pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = np.nan
     pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = 2
     pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = 7
@@ -481,4 +492,4 @@ def poolsstringtodf(file):
     pools.rename(columns={'percentage': 'listed % share'}, inplace=True)
     dropcols=['coin']
     pools=pools.drop(dropcols,axis=1)
-    return pools
+    return pools,poolerrors
