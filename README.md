@@ -6,17 +6,19 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 - Missed Blocks
 - Wallet Offline (In Development)
+- Potential Fork in a Core Node (In Development)
 - Network Consensus Below Threshold (In Development)
 
 ## Responses
 
-- height - Block height, peers, consensus
-- rednodes - Inactive "red" nodes
-- pools - Current list of public sharing pools
-- forgingpools - Pools list filtered to currently forging pools
-- price (*coin*) - Crypto prices from coinmarketcap.com
-- delegates - Outputs a list of delegates in order of rank
-- delegate (*name/rank*) - Finds delegate metrics based on name or rank
+- price (*<coin name>*) (*<currency>*) - Retrieves price data for the specified coin. Defaults to LWF and USD.
+- delegate (*<username> or <rank>*) - Provides information of a delegate. Defaults to rank 201.
+- height (*mainnet/testnet*) - Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.
+- rednodes (*mainnet/testnet*) - Lists delegates that are currently missing blocks. Defaults to mainnet.
+- pools (*raw/list/forging*)- Provides details about public sharing pools. Defaults to raw.
+  - raw - Pools list filtered to currently forging pools
+  - list - Returns an list of pools grouped by their sharing percentage.
+  - forging - Returns the pools list filtered down to the current forging delegates.
 
 ## Installation
 
@@ -49,28 +51,16 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Activation
 
-### Notifications
-
-Notifications can be scheduled via crontab.
-
-```crontab -e```
-
-Add a line to run the notifications script regularly. The example below runs it every hour at the top of the hour.
-
-```0 * * * * cd LWF-DiscordBot && python3 notifications.py && cd```
-
-### Responses
-
 Start the python script.
 
 ```cd LWF-DiscordBot```
 
-```./lwfmain-bot.py```
+```./lwf-discordbot.py```
 
 To keep the python script running after closing the terminal run the following command.
 
-```nohup ./lwfmain-bot.sh &```
+```nohup ./lwf-discordbot.sh &```
 
 To end the python script run the following command.
 
-```pkill -f lwfmain-bot```
+```pkill -f lwf-discordbot```
