@@ -37,12 +37,11 @@ async def help(ctx):
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
-                command+'pools (list/forging/errors)':('Provides details about public sharing pools. Defaults to raw.'
-                               '\n\t**raw** - Returns the entire sharing pool list with all details.'
+                command+'pools (raw/list/forging)':('Provides details about public sharing pools. Defaults to raw.'
+                               '\n\t**raw** - Returns all public sharing pools with relevant details.'
                                '\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
                                '\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
                                )
-
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=['?help'],inline=False)
@@ -152,17 +151,38 @@ async def height(ctx,net='mainnet'):
         await bot.say(response)
 
 @bot.command(pass_context=True)
-async def pools(ctx,form='raw'):
+async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string4='',string5='',string6='',string7='',string8='',string9='',string10=''):
     """Returns a list of delegates that share earnings to voters."""
     try:
         assert ctx.message.channel.name in channelnames
     except AssertionError:
         return
-    validargs=['list','raw','forging','errors']
+    validargs=['list','raw','forging','errors','add','remove','reset','help']
+    allowedperms=['admin','team managers','moderator']
+    if string1!='':
+        string+=' '+string1
+        if string2!='':
+            string+=' '+string2
+            if string3!='':
+                string+=' '+string3
+                if string4!='':
+                    string+=' '+string4
+                    if string5!='':
+                        string+=' '+string5
+                        if string6!='':
+                            string+=' '+string6
+                            if string7!='':
+                                string+=' '+string7
+                                if string8!='':
+                                    string+=' '+string8
+                                    if string9!='':
+                                        string+=' '+string9
+                                        if string10!='':
+                                            string+=' '+string10
     try:
         assert form.lower() in validargs
     except AssertionError:
-        response = 'Pool input incorrect. Should be "raw", "list", or "forging".'
+        response = 'Pools input incorrect. Should be "raw", "list", or "forging".'
         await bot.say(response)
         return
     if form.lower()=='raw':
@@ -187,12 +207,68 @@ async def pools(ctx,form='raw'):
             await bot.say(response)
     elif form.lower()=='errors':
         pools,poolerrors= getpools(poolstxtfile)
-        if len(poolerrors)>0:
-            response=poolerrors.to_string(index=False)
-        else:
-            response='No errors'
+        delegates = pd.read_csv(delegatecsv,index_col=0)
+        response=getpoolerrors(pools,poolerrors,delegates)
         for response in formatmsg(response,msglimit,'','','','',['\n']):
             await bot.say(response)
+    elif form.lower()=='add':
+        if string=='':
+            response='Please provide the pool to be added. Example: testpool https://test.com (5%-d, min payout 1 LWF)'
+        else:
+            perms=ctx.message.author.roles
+            perms=[i.name.lower() for i in perms]
+            if any(x in perms for x in allowedperms):
+                if poolcheck(string):
+                    poolstring=addpool(string,poolstxtfile)
+                    response='Pool added'
+                else:
+                    response='The pool string could not be parsed'
+            else:
+                response='Invalid permissions'
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
+    elif form.lower()=='remove':
+        if string=='':
+            response='Please provide the delegate name to be removed.'
+        else:
+            perms=ctx.message.author.roles
+            perms=[i.name.lower() for i in perms]
+            if any(x in perms for x in allowedperms):
+                poolstring=removepool(string,poolstxtfile)
+                response='Pool removed'
+            else:
+                response='Invalid permissions'
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
+    elif form.lower()=='reset':
+        perms=ctx.message.author.roles
+        perms=[i.name.lower() for i in perms]
+        if any(x in perms for x in allowedperms):
+            poolurl='https://raw.githubusercontent.com/DEADP0OL/LWF-DiscordBot/master/files/pools.txt'
+            poolstring=resetpools(poolurl,poolstxtfile)
+            response='Pools reset to '+poolurl+'\n'
+            pools,poolerrors= getpools(poolstxtfile)
+            delegates = pd.read_csv(delegatecsv,index_col=0)
+            response+=getpoolerrors(pools,poolerrors,delegates)
+        else:
+            response='Invalid permissions'
+        for response in formatmsg(response,msglimit,'','','','',['\n']):
+            await bot.say(response)
+    elif form.lower()=='help':
+        commands = {command+'pools (raw/list/forging/add/remove/reset)':('Provides details about public sharing pools. Defaults to raw.'
+                                   '\n\t**raw** - Returns all public sharing pools with relevant details.'
+                                   '\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
+                                   '\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
+                                   '\n\t**add** - Adds a pool with its details. *Elevated role required.*'
+                                   '\n\t\tExample: '+command+'help add testpool https://test.com (5%-d, min payout 1 LWF)'
+                                   '\n\t**remove** - Removes the specified delegate pool. *Elevated role required.*'
+                                   '\n\t\tExample: '+command+'help remove testpool'
+                                   '\n\t**reset** - Pulls the pool list from the github repository. *Elevated role required.*'
+                                   )
+                    }
+        description='pools command:'
+        embed=discordembeddict(commands,title=description,exclude=[],inline=False)
+        await bot.say(embed=embed)
 
 async def price_loop():
     """Updates bot presence with current coin price."""
@@ -215,7 +291,7 @@ async def price_loop():
                 game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
                 )
         await asyncio.sleep(notificationmins*60)
-        
+
 async def mainnet_loop():
     """Updates the mainnet delegate list and notifies if delegates miss blocks."""
     await bot.wait_until_ready()
