@@ -300,10 +300,13 @@ def getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin,balance=
 
 def printforgingpools(pools,numdelegates=201):
     """filters the pools based on rank and groups them by sharing percentage"""
-    bld='**'
-    ul='__'
+    #bld='**'
+    #ul='__'
+    bld=''
+    ul=''
     cb='`'
-    it='_'
+    it=''
+    #it='_'
     file='http://verifier.dutchpool.io/lwf/report.json'
     pools=pools.loc[pools['rank']<=numdelegates]
     pools=pools.sort_values(by='rank')
@@ -323,7 +326,7 @@ def printforgingpools(pools,numdelegates=201):
     pools=pools.sort_values(by='listed % share',ascending=False)
     cleanpools='\t'+ul+bld+it+'Sharing Pools (Forging)'+it+bld+ul+'\n'
     for index,row in pools.iterrows():
-        cleanpools+=bld+str(row['listed % share'])+'% Pools:'+bld+' '+row['delegate']+'\n'
+        cleanpools+=bld+cb+str(row['listed % share'])+'% Pools:'+cb+bld+' '+row['delegate']+'\n'
     cleanpools+=footer
     return cleanpools
 
@@ -412,17 +415,20 @@ def insertblankrow(df,ind):
     result=result.append(df.iloc[ind:],ind)
     return result
 
-def poolsdftojson(poolsdf):
+def poolsdftojson(poolsdf,file='files/pools.json'):
     """Converts a dataframe to JSON format for storage"""
+    poolsdf['listed % share']=pd.to_numeric(poolsdf['listed % share'])
     poolsdf=poolsdf.sort_values(by='listed % share',ascending=False)
     poolsjson=poolsdf.to_json(orient='records')
-    with open('files/pools.json', 'w') as f:
+    with open(file, 'w') as f:
         f.write(poolsjson)
     return poolsjson
 
-def poolsjsontostring(poolsjson):
+def poolsjsontostring(poolsjson,file='files/pools.txt'):
     """Converts a string in JSON format to a string for communication"""
-    poolsstring=''
+    prefix = '*_`Sharing Pools`_* - '
+    suffix = '*`KEY`* _Month = (M), Week = (W), Daily = (D), 2 Day = (2D), Custom = (C) - speak with delegate._  *_`We in no way endorse any of the pools shown here and only provide the list as a help to the community. The list only reflects the information we have been provided, we cannot police the pools and voters should do their due diligence before voting`_*'
+    poolsstring=prefix
     poolsjson=json.loads(poolsjson)
     for i in poolsjson:
         number = 0
@@ -444,7 +450,6 @@ def poolsjsontostring(poolsjson):
                 pool+=str(number)+'x'+str(value)+'%'
             else:
                 pool+=str(value)+'%'
-
         value=i.get('listed_frequency')
         if value is not None:
             if value==1:
@@ -464,16 +469,20 @@ def poolsjsontostring(poolsjson):
                 pool+=', min payout '+str(value)
         pool+='); '
         poolsstring+=pool
-    with open('files/poolstest.txt', 'w') as f:
+    poolsstring+=suffix
+    with open(file, 'w') as f:
         f.write(poolsstring)
     return poolsstring
 
-def poolsstringtodf(file):
-    rgex=r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)?\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w ]*\).*?$'
+def poolsstringtodf(file,loaded=False):
     """opens a text file and interprets the data as a dataframe"""
-    pfile = open(file, 'r')
-    pools = pfile.read()
-    pfile.close
+    rgex=r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w -/]*\).*?$'
+    if loaded is False:
+        pfile = open(file, 'r')
+        pools = pfile.read()
+        pfile.close
+    else:
+        pools=file
     pools = pools.replace('`','').lower()
     pools = max(pools.split('*'), key=len).split(';')
     pools = pd.DataFrame(pools,columns=['string'])
@@ -483,13 +492,81 @@ def poolsstringtodf(file):
     poolerrors=poolerrors.loc[(poolerrors['string']!='')&(poolerrors['string']!=' ')]
     poolerrors=poolerrors.loc[poolerrors.match.str.len()==0,'string']
     pools = pools['string'].str.extractall(rgex)
-    pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = np.nan
-    pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = 2
-    pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = 7
-    pools.loc[pools['listed_frequency']=='d', ['listed_frequency']] = 1
+    pools.loc[pools['listed_frequency']=='c', ['listed_frequency']] = ''
+    pools.loc[pools['listed_frequency']=='2d', ['listed_frequency']] = '2'
+    pools.loc[pools['listed_frequency']=='w', ['listed_frequency']] = '7'
+    pools.loc[pools['listed_frequency']=='d', ['listed_frequency']] = '1'
     pools['listed_frequency']=pd.to_numeric(pools['listed_frequency'])
     pools['min_payout']=pd.to_numeric(pools['min_payout'])
     pools.rename(columns={'percentage': 'listed % share'}, inplace=True)
     dropcols=['coin']
     pools=pools.drop(dropcols,axis=1)
     return pools,poolerrors
+
+def addpool(string,file):
+    poolsdf,poolerrors=poolsstringtodf(file)
+    pools2df,pool2errors=poolsstringtodf(string,True)
+    poolsdf=poolsdf.append(pools2df,ignore_index=True)
+    poolsjson=poolsdftojson(poolsdf)
+    poolsstring=poolsjsontostring(poolsjson)
+    return poolsstring
+
+def removepool(string,file):
+    poolsdf,poolerrors=poolsstringtodf(file)
+    cols=list(poolsdf.columns.values)
+    cols=cols[0:5]
+    for i in cols:
+        poolsdf=poolsdf.loc[poolsdf[i]!=string.lower()]
+    poolsjson=poolsdftojson(poolsdf)
+    poolsstring=poolsjsontostring(poolsjson)
+    return poolsstring
+
+def resetpools(url,file):
+    url = 'https://raw.githubusercontent.com/DEADP0OL/LWF-DiscordBot/master/files/pools.txt'
+    poolsstring=requests.get(url).text
+    with open(file, 'w') as f:
+        f.write(poolsstring)
+    return poolsstring
+
+def poolcheck(string):
+    rgex=r'^[*]?\s*\-*\s*(?P<delegate>[\w.-]+)\,*\s*(?P<delegate2>[\w]+)?\,*\s*(?P<delegate3>[\w]+)?\,*\s*(?P<delegate4>[\w]+)?\,*\s*(?P<delegate5>[\w]+)?\,*\s<*(?P<website>[\w./:-]+)?>*\s*\(\`*[0-9x]*?(?P<percentage>[0-9.]+)\%\s*\-*(?P<listed_frequency>\w+)*\`*\,*\s*(?:min)?\.*\s*(?:payout)?\s*(?P<min_payout>[0-9.]+)*\s*(?P<coin>\w+)*?\s*(?:payout)?\`*[\w -/]*\).*?$'
+    result=re.findall(rgex,string)
+    if len(result)>0:
+        return True
+    else:
+        return False
+    
+def unmatchedpools(pools,delegates):
+    unmatchedlist=pools.loc[~pools['delegate'].isin(delegates['username']),'delegate']
+    if len(unmatchedlist)==0:
+        return {'check':False,'unmatched':None}
+    else:
+        return {'check':True,'unmatched':unmatchedlist}
+
+def duplicatepools(pools):
+    pools=pools['delegate']
+    duplicatelist=pools.loc[pools.duplicated(keep=False)]
+    if len(duplicatelist)==0:
+        return {'check':False,'duplicates':None}
+    else:
+        return {'check':True,'duplicates':duplicatelist}
+
+def getpoolerrors(pools,poolerrors,delegates):
+    response=''
+    if len(poolerrors)>0:
+        response+='Pools not formatted correctly:\n'
+        response+=poolerrors.to_string(index=False)
+        response+='\n'
+    unmatched=unmatchedpools(pools,delegates)
+    if unmatched['check']:
+        response+='Pools not found in delegate list:\n'
+        response+=unmatched['unmatched'].to_string(index=False)
+        response+='\n'
+    duplicates=duplicatepools(pools)
+    if duplicates['check']:
+        response+='Pools that are duplicated:\n'
+        response+=duplicates['duplicates'].to_string(index=False)
+        response+='\n'
+    if response=='':
+        response='No errors'
+    return response
