@@ -324,7 +324,7 @@ def printforgingpools(pools,numdelegates=201):
         footer=''
     pools=pools.groupby(['listed % share'])['delegate'].apply(', '.join).reset_index()
     pools=pools.sort_values(by='listed % share',ascending=False)
-    cleanpools='\t'+ul+bld+it+'Sharing Pools (Forging)'+it+bld+ul+'\n'
+    cleanpools='\t'+ul+bld+it+'Sharing Pools'+it+bld+ul+'\n'
     for index,row in pools.iterrows():
         cleanpools+=bld+cb+str(row['listed % share'])+'% Pools:'+cb+bld+' '+row['delegate']+'\n'
     cleanpools+=footer
