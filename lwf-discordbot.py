@@ -33,6 +33,7 @@ async def help(ctx):
     except AssertionError:
         return
     commands = {command+'help':"Describes the bot and it's available commands.",
+                command+'info':"Useful resources. Try "+command+"info help",
                 command+'price (<coin name>) (<currency>)':'Retrieves price data for the specified coin. Defaults to LWF and USD.',
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
@@ -44,8 +45,34 @@ async def help(ctx):
                                )
                 }
     description='Available commands include:'
-    embed=discordembeddict(commands,title=description,exclude=['?help'],inline=False)
+    embed=discordembeddict(commands,title=description,exclude=[command+'help'],inline=False)
     await bot.say(embed=embed)
+    return
+
+@bot.command(pass_context=True)
+async def info(ctx,subinfo='help'):
+    """Useful resources."""
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
+    file='resources/info.json'
+    allinfo=json.load(open(file))
+    if subinfo.lower()=='help': 
+        helpinfo={}
+        for key,value in allinfo.items():
+            helpinfo[command+'info '+key]=allinfo[key]['help']
+        description='Available info commands include:'
+        embed=discordembeddict(helpinfo,title=description,exclude=['help'],inline=False)
+        await bot.say(embed=embed)
+    elif subinfo.lower() in allinfo:
+        info=allinfo[subinfo.lower()]
+        description=''
+        embed=discordembeddict(info,title=description,exclude=['help'],inline=False)
+        await bot.say(embed=embed)
+    else:
+        await bot.say('Information requested was not found. Check '+command+'info help')
+        return
     return
 
 @bot.command(pass_context=True)
@@ -147,7 +174,7 @@ async def height(ctx,net='mainnet'):
     else:
         connectedpeers,peerheight,consensus,backupheights=getstatus(url,backup,port)
     response=repr(backupheights)
-    for response in formatmsg(response):
+    for response in formatmsg(response,msglimit):
         await bot.say(response)
 
 @bot.command(pass_context=True)
@@ -203,7 +230,8 @@ async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string
         delegates = pd.read_csv(delegatecsv,index_col=0)
         poolstats=getpoolstats(pools,delegates,numdelegates,blockrewards,blockspermin)
         response=printforgingpools(poolstats)
-        for response in formatmsg(response,msglimit,'','','','',['\n']):
+        #for response in formatmsg(response,msglimit,'','','','',['\n']):
+        for response in formatmsg(response,msglimit,seps=['\n']):
             await bot.say(response)
     elif form.lower()=='errors':
         pools,poolerrors= getpools(poolstxtfile)
