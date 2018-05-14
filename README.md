@@ -11,6 +11,7 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Responses
 
+- **info** ([*subcommand*]) - Returns useful information.
 - **price** ([*coin name*]) ([*currency*]) - Retrieves price data for the specified coin. Defaults to LWF and USD.
 - **delegate** ([*username*] or [*rank*]) - Provides information of a delegate. Defaults to rank 201.
 - **height** (*mainnet/testnet*) - Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.
