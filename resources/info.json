@@ -1,0 +1,49 @@
+{
+    "explorers":{
+        "mainnet":"https://explorer.lwf.io/",
+        "testnet":"https://texplorer.lwf.io/",
+        "help":"Official Explorers"
+                },
+    "web-wallets":{
+        "mainnet":"https://wallet.lwf.io/",
+        "testnet":"https://twallet.lwf.io/",
+        "help":"Official Web Wallets"
+                },
+    "web":{
+        "website":"https://www.lwf.io/",
+        "help":"Main Website"
+                },
+    "guides":{
+        "server prepration":"https://medium.com/@jamie_52516/lwf-io-initial-server-preparation-guide-a3c7ee6c3348",
+        "testnet installation":"https://medium.com/@jamie_52516/lwf-io-node-installation-guide-testnet-4bf3c62d4381",
+        "mainnet installation":"https://medium.com/@jamie_52516/lwf-io-node-installation-guide-mainnet-f03ff0a81320",
+        "node security":"https://medium.com/@jamie_52516/lwf-io-how-to-secure-your-lwf-node-78e21441bf3a",
+        "voting":"https://steemit.com/lwf/@nickl/lwf-io-guide-how-to-vote-on-a-lwf-delegate",
+        "wallet creation":"https://steemit.com/lwf/@nickl/lwf-io-how-to-create-a-lwf-wallet",             
+        "help":"Maintained Network Guides"
+                },
+    "vote_report":{
+        "vote_report":"http://lwfpool.seatrips.nl/TxtVoteReport.txt",
+        "help":"Current Network Vote Rankings"
+                },
+    "github":{
+        "github":"https://github.com/lwfcoin",
+        "help":"Public Github Repository"
+                },
+    "tools":{
+        "calculator":"http://calculator.dpospool.io/",
+        "pool optimization":"https://lwf.akhnout.com/pools",
+        "payout verifier":"http://verifier.dutchpool.io/lwf/",
+        "help":"Community Tools"
+                },
+    "wp":{
+        "whitepaper-EN":"https://www.lwf.io/docs/lwf_whitepaper_en.pdf",
+        "whitepaper-IT":"https://www.lwf.io/docs/lwf_whitepaper_it.pdf",
+        "whitepaper-ZH":"https://www.lwf.io/docs/lwf_whitepaper_zh.pdf",
+        "help":"Published Whitepapers"
+                },
+    "support":{
+        "support team":"jamiec79, ghostfaceuk, simran, lucky, redtokay, pnwdrew, nickl",
+        "help":"Members of the Support Team"        
+                }
+}
