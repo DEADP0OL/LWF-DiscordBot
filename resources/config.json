@@ -27,6 +27,7 @@
             ],
     "testapinode":"https://twallet.lwf.io/",
     "testbackupnodes":[
+            "http://texplorer-node.lwf.io:18101/",
             "http://testnode1.lwf.io:18101/",
             "http://testnode2.lwf.io:18101/",
             "http://testnode3.lwf.io:18101/"
