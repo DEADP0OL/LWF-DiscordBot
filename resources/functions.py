@@ -82,14 +82,21 @@ def getstatus(url,backup,port,tol=1):
             backupheights[cleanurl(i,port)]='{:,.0f}'.format(getheight(i))
         except:
             backupheights[cleanurl(i,port)]='not available'
-    peers=getpeers(url)
-    total=len(peers)
-    peers=peers[peers['state']==2]    #filters to connected peers
-    connectedpeers=len(peers)
-    peerheight=peers['height'].mode()[0]    #calculates the mode height from connected peers
-    consensus=round(len(peers[abs(peers['height']-peerheight)<=tol])/total*100,2) #calculates consensus from peer height
-    backupheights['Peers: '+str(connectedpeers)]='{:,.0f}'.format(peerheight)
-    backupheights['Consensus']='{:.1f}%'.format(consensus)
+    try:
+        peers=getpeers(url)
+        total=len(peers)
+        peers=peers[peers['state']==2]    #filters to connected peers
+        connectedpeers=len(peers)
+        peerheight=peers['height'].mode()[0]    #calculates the mode height from connected peers
+        consensus=round(len(peers[abs(peers['height']-peerheight)<=tol])/total*100,2) #calculates consensus from peer height
+        backupheights['Peers: '+str(connectedpeers)]='{:,.0f}'.format(peerheight)
+        backupheights['Consensus']='{:.1f}%'.format(consensus)
+    except:
+        connectedpeers='not available'
+        peerheight='not available'
+        consensus='not available'
+        backupheights['Peers: '+connectedpeers]=peerheight
+        backupheights['Consensus']=consensus
     backupheights=pd.DataFrame.from_dict(backupheights,orient='index')
     backupheights.columns = ['Height']
     return connectedpeers,peerheight,consensus,backupheights
