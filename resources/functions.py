@@ -362,45 +362,61 @@ def getprice(priceurl,coin,conv='',suffix='/'):
     data2=data.copy()
     for key,value in data2.items():
         if '_usd' in key:
-            if float(value)>1000000:
-                data[key.replace('_usd',' USD')]="${:,.2f}MM".format(float(value)/1000000)
-            elif float(value)>10000:
-                data[key.replace('_usd',' USD')]="${:,.2f}K".format(float(value)/1000)
-            elif float(value)>1000:
-                data[key.replace('_usd',' USD')]="${:,.0f}".format(float(value))
-            elif float(value)>1:
-                data[key.replace('_usd',' USD')]="${:,.2f}".format(float(value))
-            elif float(value)>.1:
-                data[key.replace('_usd',' USD')]="${:,.3f}".format(float(value))
-            elif float(value)>.01:
-                data[key.replace('_usd',' USD')]="${:,.4f}".format(float(value))
-            else:
-                data[key.replace('_usd',' USD')]='$'+str(value)
-            leaveout.append(key)
+            try:
+                if float(value)>1000000:
+                    data[key.replace('_usd',' USD')]="${:,.2f}MM".format(float(value)/1000000)
+                elif float(value)>10000:
+                    data[key.replace('_usd',' USD')]="${:,.2f}K".format(float(value)/1000)
+                elif float(value)>1000:
+                    data[key.replace('_usd',' USD')]="${:,.0f}".format(float(value))
+                elif float(value)>1:
+                    data[key.replace('_usd',' USD')]="${:,.2f}".format(float(value))
+                elif float(value)>.1:
+                    data[key.replace('_usd',' USD')]="${:,.3f}".format(float(value))
+                elif float(value)>.01:
+                    data[key.replace('_usd',' USD')]="${:,.4f}".format(float(value))
+                else:
+                    data[key.replace('_usd',' USD')]='$'+str(value)
+                leaveout.append(key)
+            except:
+                leaveout.append(key)
+                pass
         elif '_btc' in key:
-            if float(value)>10000:
-                data[key.replace('_btc',' BTC')]="{:,.2f}K BTC".format(float(value)/1000)
-            elif float(value)>1000:
-                data[key.replace('_btc',' BTC')]="{:,.0f} BTC".format(float(value))
-            else:
-                data[key.replace('_btc',' BTC')]="{:,.3f} BTC".format(float(value))
-            leaveout.append(key)
+            try:
+                if float(value)>10000:
+                    data[key.replace('_btc',' BTC')]="{:,.2f}K BTC".format(float(value)/1000)
+                elif float(value)>1000:
+                    data[key.replace('_btc',' BTC')]="{:,.0f} BTC".format(float(value))
+                else:
+                    data[key.replace('_btc',' BTC')]="{:,.3f} BTC".format(float(value))
+                leaveout.append(key)
+            except:
+                leaveout.append(key)
+                pass
         elif (conv.upper()!='BTC')and(conv!='')and('_'+conv.lower() in key):
-            if float(value)>10000:
-                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.2f}K".format(float(value)/1000)+' '+conv.upper()
-            elif float(value)>1000:
-                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.0f}".format(float(value))+' '+conv.upper()
-            else:
-                data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.3f}".format(float(value))+' '+conv.upper()
-            leaveout.append(key)
+            try:
+                if float(value)>10000:
+                    data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.2f}K".format(float(value)/1000)+' '+conv.upper()
+                elif float(value)>1000:
+                    data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.0f}".format(float(value))+' '+conv.upper()
+                else:
+                    data[key.replace('_'+conv.lower(),' '+conv.upper())]="{:,.3f}".format(float(value))+' '+conv.upper()
+                leaveout.append(key)
+            except:
+                leaveout.append(key)
+                pass
         elif 'percent_change_' in key:
-            if float(value)>0:
-                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_up_small:'
-            elif float(value)<0:
-                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_down_small:'
-            else:
-                data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))
-            leaveout.append(key)
+            try:
+                if float(value)>0:
+                    data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_up_small:'
+                elif float(value)<0:
+                    data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))+' :arrow_down_small:'
+                else:
+                    data[key.replace('percent_change_','Change ')]="{0:+.2f}%".format(float(value))
+                leaveout.append(key)
+            except:
+                leaveout.append(key)
+                pass
     if conv=='':
         price=data['price USD']
     elif conv.upper()!='BTC':
