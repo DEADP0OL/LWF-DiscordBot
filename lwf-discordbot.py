@@ -302,7 +302,7 @@ async def price_loop():
     """Updates bot presence with current coin price."""
     await bot.wait_until_ready()
     await asyncio.sleep(1)
-    coin = 'bitcoin'
+    coin = 'local-world-forwarders'
     price,pricesummary=getprice(priceurl, coin)
     last_price=-2
     while not bot.is_closed:
