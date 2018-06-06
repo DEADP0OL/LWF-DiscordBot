@@ -315,7 +315,7 @@ async def price_loop():
             change=change.replace(' :arrow_down_small:','')
             await bot.change_presence(
                 afk=True,
-                status=discord.Status.invisible,
+                status=discord.Status.online,
                 game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
                 )
         await asyncio.sleep(notificationmins*60)
