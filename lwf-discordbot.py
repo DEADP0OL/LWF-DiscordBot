@@ -37,11 +37,11 @@ async def help(ctx):
                 command+'price (<coin name>) (<currency>)':'Retrieves price data for the specified coin. Defaults to LWF and USD.',
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
-                command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
-                command+'pools (raw/list/forging)':('Provides details about public sharing pools. Defaults to raw.'
-                               '\n\t**raw** - Returns all public sharing pools with relevant details.'
-                               '\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
-                               '\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
+                command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'#,
+                #command+'pools (raw/list/forging)':('Provides details about public sharing pools. Defaults to raw.'
+                               #'\n\t**raw** - Returns all public sharing pools with relevant details.'
+                               #'\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
+                               #'\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
                                )
                 }
     description='Available commands include:'
@@ -176,7 +176,7 @@ async def height(ctx,net='mainnet'):
     response=repr(backupheights)
     for response in formatmsg(response,msglimit):
         await bot.say(response)
-
+'''
 @bot.command(pass_context=True)
 async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string4='',string5='',string6='',string7='',string8='',string9='',string10=''):
     """Returns a list of delegates that share earnings to voters."""
@@ -297,7 +297,7 @@ async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string
         description='pools command:'
         embed=discordembeddict(commands,title=description,exclude=[],inline=False)
         await bot.say(embed=embed)
-
+'''
 async def price_loop():
     """Updates bot presence with current coin price."""
     await bot.wait_until_ready()
