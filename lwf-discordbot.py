@@ -29,7 +29,7 @@ async def on_ready():
 async def help(ctx):
     """Describes the bot and it's available commands."""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     commands = {command+'help':"Describes the bot and it's available commands.",
@@ -53,7 +53,7 @@ async def help(ctx):
 async def info(ctx,subinfo='help'):
     """Useful resources."""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     file='resources/info.json'
@@ -79,7 +79,7 @@ async def info(ctx,subinfo='help'):
 async def price(ctx,coin='local world forwarders',conv=''):
     """Retrieves price data for a specified coin. Ex: ?price bitcoin"""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     try:
@@ -95,7 +95,7 @@ async def price(ctx,coin='local world forwarders',conv=''):
 async def delegate(ctx,delegate='201',limit=3):
     """Filters the delegate list by name or rank. Ex: ?delegate deadpool"""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     delegates = pd.read_csv(delegatecsv,index_col=0)
@@ -124,7 +124,7 @@ async def delegate(ctx,delegate='201',limit=3):
 async def rednodes(ctx,net='mainnet'):
     """Lists delegates that are currently missing blocks."""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     try:
@@ -160,7 +160,7 @@ async def rednodes(ctx,net='mainnet'):
 async def height(ctx,net='mainnet'):
     """Provides the current height accross mainnet or testnet nodes."""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     try:
@@ -181,7 +181,7 @@ async def height(ctx,net='mainnet'):
 async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string4='',string5='',string6='',string7='',string8='',string9='',string10=''):
     """Returns a list of delegates that share earnings to voters."""
     try:
-        assert ctx.message.channel.name in channelnames
+        assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
     validargs=['list','raw','forging','errors','add','remove','reset','help']
