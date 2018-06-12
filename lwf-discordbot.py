@@ -42,7 +42,7 @@ async def help(ctx):
                                #'\n\t**raw** - Returns all public sharing pools with relevant details.'
                                #'\n\t**list** - Returns a list of pools grouped by their sharing percentage.'
                                #'\n\t**forging** - Returns the pools list filtered down to the current forging delegates.'
-                               )
+                               #)
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=[command+'help'],inline=False)
