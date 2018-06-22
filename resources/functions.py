@@ -125,11 +125,11 @@ def getchecksum(net,url,checksumsjson):
         checksums={
                 "mainnet":{
                         "checksum":"",
-                        "last-modified":"Thu, 5 Apr 2018 00:00:00"
+                        "last-modified":"Thu, 5 Apr 2018 00:00:00 GMT"
                         },
                 "testnet":{
                         "checksum":"",
-                        "last-modified":"Thu, 5 Apr 2018 00:00:00"
+                        "last-modified":"Thu, 5 Apr 2018 00:00:00 GMT"
                         }
                 }
         with open(checksumsjson, 'w') as fp:
@@ -137,14 +137,14 @@ def getchecksum(net,url,checksumsjson):
             #add trailing newline for POSIX compatibility
             fp.write('\n')
             fp.close()
-    checksumlastmod = datetime.strptime(checksums[net]["last-modified"],'%a, %d %b %Y %H:%M:%S')
+    checksumlastmod = datetime.strptime(checksums[net]["last-modified"],'%a, %d %b %Y %H:%M:%S GMT')
     remote = urllib.request.Request(url)
     remote.get_method = lambda : 'HEAD'
     headers = urllib.request.urlopen(remote)
-    lastmod = headers.headers['last-modified']
-    lastmod = datetime.strptime(lastmod,'%a, %d %b %Y %H:%M:%S %Z')
+    lastmodstr = headers.headers['last-modified']
+    lastmod = datetime.strptime(lastmodstr,'%a, %d %b %Y %H:%M:%S %Z')
     if lastmod>checksumlastmod:
-        lastmod='{:%a, %d %b %Y %H:%M:%S}'.format(lastmod)
+        lastmod=lastmodstr
         checksum=get_snapshot_md5_sum(url)
         checksums[net]["checksum"]=checksum
         checksums[net]["last-modified"]=lastmod
