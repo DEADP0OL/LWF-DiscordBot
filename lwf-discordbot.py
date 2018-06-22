@@ -127,6 +127,8 @@ async def rednodes(ctx,net='mainnet'):
         assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
+    await bot.say("Command response disabled. Under maintenance. :tools:")
+'''
     try:
         assert net.lower()=='mainnet' or net.lower()=='testnet'
     except AssertionError:
@@ -155,6 +157,7 @@ async def rednodes(ctx,net='mainnet'):
             response = 'No red nodes'
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
+'''
 
 @bot.command(pass_context=True)
 async def height(ctx,net='mainnet'):
@@ -176,6 +179,7 @@ async def height(ctx,net='mainnet'):
     response=repr(backupheights)
     for response in formatmsg(response,msglimit):
         await bot.say(response)
+
 '''
 @bot.command(pass_context=True)
 async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string4='',string5='',string6='',string7='',string8='',string9='',string10=''):
@@ -184,6 +188,7 @@ async def pools(ctx,form='raw',string='',string1='',string2='',string3='',string
         assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
+    await bot.say("Command response disabled. Under maintenance. :tools:")
     validargs=['list','raw','forging','errors','add','remove','reset','help']
     allowedperms=['admin','team managers','moderator']
     if string1!='':
@@ -361,6 +366,6 @@ async def testnet_loop():
 
 if __name__ == '__main__':
     bot.loop.create_task(price_loop())
-    bot.loop.create_task(mainnet_loop())
-    bot.loop.create_task(testnet_loop())
+    #bot.loop.create_task(mainnet_loop())
+    #bot.loop.create_task(testnet_loop())
     bot.run(apitoken)
