@@ -34,7 +34,7 @@ def getconfigs(file):
     return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,notificationmins,commandprefix
 
 def cleanurl(url,port):
-    """removes url components to display node""" 
+    """removes url components to display node"""
     cleanitems=['https://','http://','/',':'+port]
     for i in cleanitems:
         url=url.replace(i,'')
@@ -100,6 +100,18 @@ def getstatus(url,backup,port,tol=1):
     backupheights=pd.DataFrame.from_dict(backupheights,orient='index')
     backupheights.columns = ['Height']
     return connectedpeers,peerheight,consensus,backupheights
+
+def get_snapshot_md5_sum(url, max_file_size=100*1024*1024):
+    remote = urllib2.urlopen(url)
+    hash = hashlib.md5()
+    total_read = 0
+    while True:
+        data = remote.read(4096)
+        total_read += 4096
+        if not data or total_read > max_file_size:
+            break
+        hash.update(data)
+    return hash.hexdigest()
 
 def getheight(url):
     """gets current block height from the url node api"""
@@ -202,7 +214,7 @@ def checknames(name):
     return names
 
 def makemissedblockmsglist(delegates,blockinterval,minmissedblocks,includeprevious=False,numdelegates=201):
-    """creates a list of delegates that have missed blocks. When includeprevious is False, 
+    """creates a list of delegates that have missed blocks. When includeprevious is False,
     it will only include delegates that have either not previously been notified or have exceeded the blockinterval"""
     missedblockmsglist=[]
     for index, row in delegates.loc[(delegates['newmissedblocks']>=minmissedblocks)&(delegates['rank']<=numdelegates)].iterrows():
@@ -558,7 +570,7 @@ def poolcheck(string):
         return True
     else:
         return False
-    
+
 def unmatchedpools(pools,delegates):
     unmatchedlist=pools.loc[~pools['delegate'].isin(delegates['username']),'delegate']
     if len(unmatchedlist)==0:

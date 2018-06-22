@@ -10,6 +10,7 @@
             "http://node4.lwf.io:18124/"
             ],
     "port":"18124",
+    "snapshoturl": "https://downloads.lwf.io/snapshots/master/latest",
     "blockintervalnotification":15000,
     "minmissedblocks":2,
     "numdelegates":201,
@@ -33,5 +34,6 @@
     "testchannels":[
             "lwf_bot"
             ],
-    "testport":"18101"
+    "testport":"18101",
+    "testsnapshoturl": "https://downloads.lwf.io/snapshots/testnet/latest"
 }
