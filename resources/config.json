@@ -17,7 +17,7 @@
     "blockrewards":5,
     "blockspermin":4,
     "notificationmins":15,
-    "commandprefix":"?",
+    "commandprefix":"!",
     "server":"lwf.io",
     "channels":[
             "lwf_bot"

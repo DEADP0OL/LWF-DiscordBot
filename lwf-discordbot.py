@@ -10,6 +10,7 @@ delegatecsv="files/delegates.csv"
 testdelegatecsv="files/testnet-delegates.csv"
 discordnames=getusernames('resources/discordnames.json')
 testdiscordnames=getusernames('resources/testnet-discordnames.json')
+checksumsjson="files/checksums.json"
 msglimit=1800
 priceurl='https://api.coinmarketcap.com/v1/ticker/'
 
@@ -174,10 +175,17 @@ async def snapshot(ctx,net='mainnet'):
         await bot.say(response)
         return
     if net.lower()=='testnet':
-        checksum=get_snapshot_md5_sum(testsnapshoturl)
+        try:
+            checksum,lastmod=getchecksum(net,testsnapshoturl,checksumsjson)
+            response=checksum+'\n'+lastmod+'\n'+testsnapshoturl
+        except urllib.request.URLError:
+            response='Could not reach ' + testsnapshoturl
     else:
-        checksum=get_snapshot_md5_sum(snapshoturl)
-    response=repr(checksum)
+        try:
+            checksum,lastmod=getchecksum(net,snapshoturl,checksumsjson)
+            response=checksum+'\n'+lastmod+'\n'+snapshoturl
+        except urllib.request.URLError:
+            response='Could not reach ' + snapshoturl
     for response in formatmsg(response,msglimit):
         await bot.say(response)
 

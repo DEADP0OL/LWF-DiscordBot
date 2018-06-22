@@ -4,8 +4,11 @@ import requests
 import json
 import re
 import time
+from datetime import datetime
 import discord
 import asyncio
+import hashlib
+import urllib.request
 from discord.ext import commands
 from collections import defaultdict
 
@@ -18,6 +21,7 @@ def getconfigs(file):
     url = configs.get("apinode")
     backup = configs.get("backupnodes")
     port=configs.get("port")
+    snapshoturl=configs.get("snapshoturl")
     blockinterval = configs.get("blockintervalnotification")
     minmissedblocks = configs.get("minmissedblocks")
     servername = configs.get("server")
@@ -29,9 +33,10 @@ def getconfigs(file):
     testurl = configs.get("testapinode")
     testbackup = configs.get("testbackupnodes")
     testport=configs.get("testport")
+    testsnapshoturl=configs.get("testsnapshoturl")
     notificationmins=configs.get("notificationmins")
     commandprefix=configs.get("commandprefix")
-    return apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,notificationmins,commandprefix
+    return apitoken,url,backup,port,snapshoturl,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,testsnapshoturl,notificationmins,commandprefix
 
 def cleanurl(url,port):
     """removes url components to display node"""
@@ -102,7 +107,7 @@ def getstatus(url,backup,port,tol=1):
     return connectedpeers,peerheight,consensus,backupheights
 
 def get_snapshot_md5_sum(url, max_file_size=100*1024*1024):
-    remote = urllib2.urlopen(url)
+    remote = urllib.request.urlopen(url)
     hash = hashlib.md5()
     total_read = 0
     while True:
@@ -113,6 +118,46 @@ def get_snapshot_md5_sum(url, max_file_size=100*1024*1024):
         hash.update(data)
     return hash.hexdigest()
 
+def getchecksum(net,url,checksumsjson):
+    try:
+        checksums=json.load(open(checksumsjson))
+    except FileNotFoundError:
+        checksums={
+                "mainnet":{
+                        "checksum":"",
+                        "last-modified":"Thu, 5 Apr 2018 00:00:00"
+                        },
+                "testnet":{
+                        "checksum":"",
+                        "last-modified":"Thu, 5 Apr 2018 00:00:00"
+                        }
+                }
+        with open(checksumsjson, 'w') as fp:
+            json.dump(checksums, fp, indent=4, separators=(',', ': '), sort_keys=True)
+            #add trailing newline for POSIX compatibility
+            fp.write('\n')
+            fp.close()
+    checksumlastmod = datetime.strptime(checksums[net]["last-modified"],'%a, %d %b %Y %H:%M:%S')
+    remote = urllib.request.Request(url)
+    remote.get_method = lambda : 'HEAD'
+    headers = urllib.request.urlopen(remote)
+    lastmod = headers.headers['last-modified']
+    lastmod = datetime.strptime(lastmod,'%a, %d %b %Y %H:%M:%S %Z')
+    if lastmod>checksumlastmod:
+        lastmod='{:%a, %d %b %Y %H:%M:%S}'.format(lastmod)
+        checksum=get_snapshot_md5_sum(url)
+        checksums[net]["checksum"]=checksum
+        checksums[net]["last-modified"]=lastmod
+        with open(checksumsjson, 'w') as fp:
+            json.dump(checksums, fp, indent=4, separators=(',', ': '), sort_keys=True)
+            #add trailing newline for POSIX compatibility
+            fp.write('\n')
+            fp.close()
+    else:
+        checksum=checksums[net]["checksum"]
+        lastmod='{:%a, %d %b %Y %H:%M:%S}'.format(checksumlastmod)
+    return checksum,lastmod
+        
 def getheight(url):
     """gets current block height from the url node api"""
     height = requests.get(url+'api/blocks/getHeight').json()['height']
