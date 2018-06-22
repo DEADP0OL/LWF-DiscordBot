@@ -155,7 +155,7 @@ def getchecksum(net,url,checksumsjson):
             fp.close()
     else:
         checksum=checksums[net]["checksum"]
-        lastmod='{:%a, %d %b %Y %H:%M:%S}'.format(checksumlastmod)
+        lastmod='{:%a, %d %b %Y %H:%M:%S GMT}'.format(checksumlastmod)
     return checksum,lastmod
         
 def getheight(url):
