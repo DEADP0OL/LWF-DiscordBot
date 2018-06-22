@@ -129,8 +129,7 @@ async def rednodes(ctx,net='mainnet'):
         assert (ctx.message.channel.name in channelnames) or (ctx.message.server is None)
     except AssertionError:
         return
-    await bot.say("Command response disabled. Under maintenance. :tools:")
-'''
+    #await bot.say("Command response disabled. Under maintenance. :tools:")
     try:
         assert net.lower()=='mainnet' or net.lower()=='testnet'
     except AssertionError:
@@ -151,15 +150,14 @@ async def rednodes(ctx,net='mainnet'):
         delegates = pd.read_csv(delegatecsv,index_col=0)
         delegates,missedblockmsglist=makemissedblockmsglist(delegates,0,1,True,numdelegates)
         if len(missedblockmsglist)>0:
-            server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
-            userlist=server.members
-            missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,discordnames,server)
+            #server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+            #userlist=server.members
+            #missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,discordnames,server)
             response=makemissedblockmsg(missedblockmsglist,0,True)
         else:
             response = 'No red nodes'
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
-'''
 
 @bot.command(pass_context=True)
 async def snapshot(ctx,net='mainnet'):
@@ -396,6 +394,6 @@ async def testnet_loop():
 
 if __name__ == '__main__':
     bot.loop.create_task(price_loop())
-    #bot.loop.create_task(mainnet_loop())
-    #bot.loop.create_task(testnet_loop())
+    bot.loop.create_task(mainnet_loop())
+    bot.loop.create_task(testnet_loop())
     bot.run(apitoken)
