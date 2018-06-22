@@ -223,7 +223,7 @@ def discordembeddict(dictionary,exclude=[],title='',url='',color=0x0080c0,footer
 
 def processdelegates(delegatesnew,delegates):
     """compares the current and previous delegate block counts to track consecutive missed/produced blocks"""
-    delegatesold=delegates
+    delegatesold=delegates.copy()
     delegatesnew['missedblocksmsg']=0
     if delegates is None:
         #if no previous delegate block counts are available, start missed/produced block counters at 0
