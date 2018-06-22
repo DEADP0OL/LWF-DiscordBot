@@ -3,13 +3,14 @@
 from resources.functions import *
 
 '''obtain config variables and initiate slack client'''
-apitoken,url,backup,port,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,notificationmins,commandprefix=getconfigs('resources/config.json')
+apitoken,url,backup,port,snapshoturl,blockinterval,minmissedblocks,servername,channelnames,usernames,numdelegates,blockrewards,blockspermin,testurl,testbackup,testport,testsnapshoturl,notificationmins,commandprefix=getconfigs('resources/config.json')
 command=commandprefix
 poolstxtfile="files/pools.txt"
 delegatecsv="files/delegates.csv"
 testdelegatecsv="files/testnet-delegates.csv"
 discordnames=getusernames('resources/discordnames.json')
 testdiscordnames=getusernames('resources/testnet-discordnames.json')
+checksumsjson="files/checksums.json"
 msglimit=1800
 priceurl='https://api.coinmarketcap.com/v1/ticker/'
 
@@ -37,6 +38,7 @@ async def help(ctx):
                 command+'price (<coin name>) (<currency>)':'Retrieves price data for the specified coin. Defaults to LWF and USD.',
                 command+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 command+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
+                command+'snapshot (mainnet/testnet)':'Show checksum for latest snapshot. Defaults to mainnet.',
                 command+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'#,
                 #command+'pools (raw/list/forging)':('Provides details about public sharing pools. Defaults to raw.'
                                #'\n\t**raw** - Returns all public sharing pools with relevant details.'
@@ -58,7 +60,7 @@ async def info(ctx,subinfo='help'):
         return
     file='resources/info.json'
     allinfo=json.load(open(file))
-    if subinfo.lower()=='help': 
+    if subinfo.lower()=='help':
         helpinfo={}
         for key,value in allinfo.items():
             helpinfo[command+'info '+key]=allinfo[key]['help']
@@ -158,6 +160,34 @@ async def rednodes(ctx,net='mainnet'):
     for response in formatmsg(response,msglimit,'','','',''):
         await bot.say(response)
 '''
+
+@bot.command(pass_context=True)
+async def snapshot(ctx,net='mainnet'):
+    """Show checksum for latest snapshot."""
+    try:
+        assert ctx.message.channel.name in channelnames
+    except AssertionError:
+        return
+    try:
+        assert net.lower()=='mainnet' or net.lower()=='testnet'
+    except AssertionError:
+        response = 'Network input incorrect. Should be "mainnet" or "testnet".'
+        await bot.say(response)
+        return
+    if net.lower()=='testnet':
+        try:
+            checksum,lastmod=getchecksum(net,testsnapshoturl,checksumsjson)
+            response=checksum+'\n'+lastmod+'\n'+testsnapshoturl
+        except urllib.request.URLError:
+            response='Could not reach ' + testsnapshoturl
+    else:
+        try:
+            checksum,lastmod=getchecksum(net,snapshoturl,checksumsjson)
+            response=checksum+'\n'+lastmod+'\n'+snapshoturl
+        except urllib.request.URLError:
+            response='Could not reach ' + snapshoturl
+    for response in formatmsg(response,msglimit):
+        await bot.say(response)
 
 @bot.command(pass_context=True)
 async def height(ctx,net='mainnet'):
