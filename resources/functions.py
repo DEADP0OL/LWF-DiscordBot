@@ -108,15 +108,15 @@ def getstatus(url,backup,port,tol=1):
 
 def get_snapshot_md5_sum(url, max_file_size=100*1024*1024):
     remote = urllib.request.urlopen(url)
-    hash = hashlib.md5()
-    total_read = 0
-    while True:
-        data = remote.read(4096)
-        total_read += 4096
-        if not data or total_read > max_file_size:
-            break
-        hash.update(data)
-    return hash.hexdigest()
+    #hash = hashlib.md5()
+    #total_read = 0
+    #while True:
+        #data = remote.read(4096)
+        #total_read += 4096
+        #if not data or total_read > max_file_size:
+            #break
+        #hash.update(data)
+    return hashlib.md5(remote.read()).hexdigest()
 
 def getchecksum(net,url,checksumsjson):
     try:
