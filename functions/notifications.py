@@ -15,8 +15,8 @@ def processdelegates(delegatesnew,delegates):
         delegates.rename(columns={'missedblocks': 'missedold','producedblocks':'producedold','missedblocksmsg':'msgold'}, inplace=True)
         delegates=delegates[['username','missedold','producedold','newmissedblocks','newproducedblocks','msgold']]
         delegatesnew=pd.merge(delegatesnew,delegates,how='left',on='username')
-        delegatesnew['missedblocksmsg']=np.minimum(0,delegatesnew['missedblocksmsg']+delegatesnew['msgold'])
-        delegatesnew['newmissedblocks']=np.minimum(0,delegatesnew['newmissedblocks']+delegatesnew['missedblocks']-delegatesnew['missedold'])
+        delegatesnew['missedblocksmsg']=np.maximum(0,delegatesnew['missedblocksmsg']+delegatesnew['msgold'])
+        delegatesnew['newmissedblocks']=np.maximum(0,delegatesnew['newmissedblocks']+delegatesnew['missedblocks']-delegatesnew['missedold'])
         #resets consecutive produced block counter to 0 if a delegate misses a block
         delegatesnew.loc[delegatesnew['missedblocks']-delegatesnew['missedold']>0, ['newproducedblocks']] = 0
         delegatesnew['newproducedblocks']=np.minimum(0,delegatesnew['newproducedblocks']+delegatesnew['producedblocks']-delegatesnew['producedold'])
