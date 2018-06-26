@@ -170,7 +170,7 @@ async def rednodes(ctx,net='mainnet',ping="No"):
             if ping.lower()=="ping":
                 perms=ctx.message.author.roles
                 perms=[i.name.lower() for i in perms]
-                if any(x in perms for x in allowedperms):
+                if any(x in perms for x in discordconfigs.get("elevatedperms")):
                     server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
                     mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
                     missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,mainnetdiscordnames,server)
