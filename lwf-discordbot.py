@@ -34,7 +34,7 @@ async def on_ready():
     print('Logged in')
     print('Name: '+bot.user.name)
     print('ID: '+bot.user.id)
-    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("server"), list(bot.servers))
+    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
     if server is None:
         print('Server: No Name')
     else:
@@ -153,7 +153,7 @@ async def rednodes(ctx,net='mainnet',ping="No"):
                 perms=ctx.message.author.roles
                 perms=[i.name.lower() for i in perms]
                 if any(x in perms for x in discordconfigs.get("elevatedperms")):
-                    server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+                    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
                     testnetdiscordnames=json.load(open('resources/testnet-discordnames.json'))
                     missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,testnetdiscordnames,server)
                     response=makemissedblockmsg(missedblockmsglist,0,True)
@@ -170,8 +170,9 @@ async def rednodes(ctx,net='mainnet',ping="No"):
             if ping.lower()=="ping":
                 perms=ctx.message.author.roles
                 perms=[i.name.lower() for i in perms]
+                print(perms)
                 if any(x in perms for x in discordconfigs.get("elevatedperms")):
-                    server = discord.utils.find(lambda m: (m.name).lower() == servername, list(bot.servers))
+                    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
                     mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
                     missedblockmsglist=modifymissedblockmsglist(missedblockmsglist,mainnetdiscordnames,server)
                     response=makemissedblockmsg(missedblockmsglist,0,True)
@@ -271,7 +272,7 @@ async def mainnet_loop():
         delegates,missedblockmsglist=makemissedblockmsglist(delegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
         delegates.to_csv(mainnetconfigs.get("delegatecsv"))
         if len(missedblockmsglist)>0 and len(mainnetconfigs.get("channels"))>0:
-                server = discord.utils.find(lambda m: (m.name).lower() == servername, bot.servers)
+                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
                 mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
                 newmissedblockmsglist=modifymissedblockmsglist(missedblockmsglist,mainnetdiscordnames,server)
                 message=makemissedblockmsg(newmissedblockmsglist,discordconfigs.get("blockinterval"))
@@ -293,7 +294,7 @@ async def testnet_loop():
         testdelegates,testmissedblockmsglist=makemissedblockmsglist(testdelegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
         testdelegates.to_csv(testnetconfigs.get("delegatecsv"))
         if len(testmissedblockmsglist)>0 and len(testnetconfigs.get("channels"))>0:
-                server = discord.utils.find(lambda m: (m.name).lower() == servername, bot.servers)
+                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
                 testnetdiscordnames=json.load(open('resources/testnet-discordnames.json'))
                 newtestmissedblockmsglist=modifymissedblockmsglist(testmissedblockmsglist,testnetdiscordnames,server)
                 message=makemissedblockmsg(newtestmissedblockmsglist,discordconfigs.get("blockinterval"))
