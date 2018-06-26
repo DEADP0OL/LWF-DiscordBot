@@ -1,0 +1,14 @@
+{
+    "apinode":"https://twallet.lwf.io/",
+    "corenodes":[
+            "http://texplorer-node.lwf.io:18101/",
+            "http://testnode1.lwf.io:18101/",
+            "http://testnode2.lwf.io:18101/",
+            "http://testnode3.lwf.io:18101/"
+            ],
+    "port":"18101",
+    "channels":[
+            ],
+    "delegatecsv":"files/testnet-delegates.csv",
+    "snapshoturl": "http://snapshots.lwf.io:4444/info/testnet"
+}

@@ -1,0 +1,21 @@
+{
+    "apitoken":"xoxb-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "blockinterval":1500000,
+    "minmissedblocks":2,
+    "numdelegates":201,
+    "notificationmins":15,
+    "commandprefix":"!",
+    "bot_server":"lwf.io",
+    "listen_channels":[
+            "lwf_bot"
+            ],
+    "elevatedperms"=[
+            "admin",
+            "team managers",
+            "moderator",
+            "lwf team",
+            "dev's"
+            ],
+    "msglenlimit"=1800,
+    "priceurl"="https://api.coinmarketcap.com/v1/ticker/"
+}
