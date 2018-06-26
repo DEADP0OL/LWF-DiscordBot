@@ -9,13 +9,13 @@
     "listen_channels":[
             "lwf_bot"
             ],
-    "elevatedperms"=[
+    "elevatedperms":[
             "admin",
             "team managers",
             "moderator",
             "lwf team",
             "dev's"
             ],
-    "msglenlimit"=1800,
-    "priceurl"="https://api.coinmarketcap.com/v1/ticker/"
+    "msglenlimit":1800,
+    "priceurl":"https://api.coinmarketcap.com/v1/ticker/"
 }
