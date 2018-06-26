@@ -35,7 +35,13 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Configuration
 
-```nano resources/config.json```
+Copy default discord config.
+
+```cp configs/default_discord.json configs/discord.json```
+
+Edit the active config file.
+
+```nano configs/discord.json```
 
 - **discordapitoken**: The apitoken assigned to your bot
 - **apinode**: The public node url or ip address for api requests (default https://wallet.lwf.io/)
