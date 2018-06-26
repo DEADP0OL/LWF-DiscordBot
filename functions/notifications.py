@@ -19,7 +19,7 @@ def processdelegates(delegatesnew,delegates):
         delegatesnew['newmissedblocks']=np.maximum(0,delegatesnew['newmissedblocks']+delegatesnew['missedblocks']-delegatesnew['missedold'])
         #resets consecutive produced block counter to 0 if a delegate misses a block
         delegatesnew.loc[delegatesnew['missedblocks']-delegatesnew['missedold']>0, ['newproducedblocks']] = 0
-        delegatesnew['newproducedblocks']=np.minimum(0,delegatesnew['newproducedblocks']+delegatesnew['producedblocks']-delegatesnew['producedold'])
+        delegatesnew['newproducedblocks']=np.maximum(0,delegatesnew['newproducedblocks']+delegatesnew['producedblocks']-delegatesnew['producedold'])
         #resets consecutive missed block counter to 0 if a delegate produces a block
         delegatesnew.loc[delegatesnew['producedblocks']-delegatesnew['producedold']>0, ['newmissedblocks','missedblocksmsg']] = 0
         #resets all counters to 0 if a delegate begins forging
