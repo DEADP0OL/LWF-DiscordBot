@@ -58,9 +58,12 @@ def getstatus(url,backup,port,tol=1):
     backupheights.columns = ['Height']
     return connectedpeers,peerheight,consensus,backupheights
 
-def getchecksum(net,url):
+def getchecksum(url):
     req = requests.get(url).json()
-    return req.get("checksum"),datetime.datetime.utcfromtimestamp(req.get("last_modified")).strftime('%Y-%m-%d %H:%M:%S GMT')
+    req["last_modified"]=datetime.datetime.utcfromtimestamp(req.get("last_modified")).strftime('%Y-%m-%d %H:%M:%S GMT')
+    req["height"]="{:,}".format(int(req["height"]))
+    req = pd.DataFrame.from_dict(req, orient='index')
+    return req.to_string(header=False)
         
 def getheight(url):
     """gets current block height from the url node api"""

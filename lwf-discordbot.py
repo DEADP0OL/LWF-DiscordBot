@@ -199,19 +199,15 @@ async def snapshot(ctx,net='mainnet'):
         await bot.say(response)
         return
     if net.lower()=='testnet':
-        try:
-            checksum,lastmod=getchecksum(net,testnetconfigs.get("snapshoturl"))
-            response=str(checksum)+'\n'+str(lastmod)
-        except Exception as e:
-            print(e)
-            response='Could not get data from ' + testnetconfigs.get("snapshoturl")
+        snapshoturl=testnetconfigs.get("snapshoturl")
     else:
-        try:
-            checksum,lastmod=getchecksum(net,mainnetconfigs.get("snapshoturl"))
-            response=str(checksum)+'\n'+str(lastmod)
-        except Exception as e:
-            print(e)
-            response='Could not get data from ' + mainnetconfigs.get("snapshoturl")
+        snapshoturl=mainnetconfigs.get("snapshoturl")
+    try:
+        checksum=getchecksum(snapshoturl)
+        response=checksum
+    except Exception as e:
+        print(e)
+        response='Could not get data from ' + snapshoturl
     for response in formatmsg(response,discordconfigs.get("msglenlimit")):
         await bot.say(response)
 
