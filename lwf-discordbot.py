@@ -38,7 +38,7 @@ async def on_ready():
     if server is None:
         print('Server: No Name')
     else:
-        print('Server: '+server)
+        print('Server: '+server.name)
     print('------')
 
 '''Define Bot Commands'''
@@ -55,7 +55,8 @@ async def help(ctx):
                 discordconfigs.get("commandprefix")+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 discordconfigs.get("commandprefix")+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 discordconfigs.get("commandprefix")+'snapshot (mainnet/testnet)':'Show checksum for latest snapshot. Defaults to mainnet.',
-                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'
+                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
+                discordconfigs.get("commandprefix")+'pools':'Provides a list of pools and their details.'
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=[discordconfigs.get("commandprefix")+'help'],inline=False)
@@ -138,7 +139,6 @@ async def rednodes(ctx,net='mainnet',ping="No"):
         assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.server is None)
     except AssertionError:
         return
-    #await bot.say("Command response disabled. Under maintenance. :tools:")
     try:
         assert net.lower()=='mainnet' or net.lower()=='testnet'
     except AssertionError:
@@ -231,6 +231,25 @@ async def height(ctx,net='mainnet'):
     response=repr(backupheights)
     for response in formatmsg(response,discordconfigs.get("msglenlimit")):
         await bot.say(response)
+        
+@bot.command(pass_context=True)
+async def pools(ctx):
+    """Provides the pools list."""
+    try:
+        assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.channel.name in ['voters_channel']) or (ctx.message.server is None)
+    except AssertionError:
+        return
+    try:
+        req = requests.get(discordconfigs.get("poolsurl"))
+        req.raise_for_status()
+        response=req.text
+    except Exception as e:
+        print(e)
+        response = 'Unable to read pools list from '+discordconfigs.get("poolsurl")
+        await bot.say(response)
+        return
+    for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
+        await bot.say(response)
 
 async def price_loop():
     """Updates bot presence with current coin price."""
@@ -240,18 +259,21 @@ async def price_loop():
     price,pricesummary=getprice(discordconfigs.get("priceurl"), coin)
     last_price=-2
     while not bot.is_closed:
-        price,pricesummary=getprice(discordconfigs.get("priceurl"), coin)
-        if price != last_price:
-            last_price = price
-            rank=pricesummary['rank']
-            change=pricesummary['Change 24h']
-            change=change.replace(' :arrow_up_small:','')
-            change=change.replace(' :arrow_down_small:','')
-            await bot.change_presence(
-                afk=True,
-                status=discord.Status.online,
-                game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
-                )
+        try:
+            price,pricesummary=getprice(discordconfigs.get("priceurl"), coin)
+            if price != last_price:
+                last_price = price
+                rank=pricesummary['rank']
+                change=pricesummary['Change 24h']
+                change=change.replace(' :arrow_up_small:','')
+                change=change.replace(' :arrow_down_small:','')
+                await bot.change_presence(
+                    afk=True,
+                    status=discord.Status.online,
+                    game=discord.Game(name=pricesummary['symbol']+': '+price+' ('+change+')', type=3)
+                    )
+        except Exception as e:
+            print(e)
         await asyncio.sleep(discordconfigs.get("notificationmins")*60)
 
 async def mainnet_loop():
@@ -259,21 +281,24 @@ async def mainnet_loop():
     await bot.wait_until_ready()
     await asyncio.sleep(1)
     while not bot.is_closed:
-        delegatesnew=getdelegates(mainnetconfigs.get("apinode"))
         try:
-            delegates = pd.read_csv(mainnetconfigs.get("delegatecsv"),index_col=0)
-        except FileNotFoundError:
-            delegates=None
-        delegates=processdelegates(delegatesnew,delegates)
-        delegates,missedblockmsglist=makemissedblockmsglist(delegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
-        delegates.to_csv(mainnetconfigs.get("delegatecsv"))
-        if len(missedblockmsglist)>0 and len(mainnetconfigs.get("channels"))>0:
-                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
-                mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
-                newmissedblockmsglist=modifymissedblockmsglist(missedblockmsglist,mainnetdiscordnames,server)
-                message=makemissedblockmsg(newmissedblockmsglist,discordconfigs.get("blockinterval"))
-                for channelname in mainnetconfigs.get("channels"):
-                    await bot.send_message(getchannel(channelname,server), message)
+            delegatesnew=getdelegates(mainnetconfigs.get("apinode"))
+            try:
+                delegates = pd.read_csv(mainnetconfigs.get("delegatecsv"),index_col=0)
+            except FileNotFoundError:
+                delegates=None
+            delegates=processdelegates(delegatesnew,delegates)
+            delegates,missedblockmsglist=makemissedblockmsglist(delegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
+            delegates.to_csv(mainnetconfigs.get("delegatecsv"))
+            if len(missedblockmsglist)>0 and len(mainnetconfigs.get("channels"))>0:
+                    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
+                    mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
+                    newmissedblockmsglist=modifymissedblockmsglist(missedblockmsglist,mainnetdiscordnames,server)
+                    message=makemissedblockmsg(newmissedblockmsglist,discordconfigs.get("blockinterval"))
+                    for channelname in mainnetconfigs.get("channels"):
+                        await bot.send_message(getchannel(channelname,server), message)
+        except Exception as e:
+            print(e)
         await asyncio.sleep(discordconfigs.get("notificationmins")*60)
 
 async def testnet_loop():
@@ -281,21 +306,24 @@ async def testnet_loop():
     await bot.wait_until_ready()
     await asyncio.sleep(1)
     while not bot.is_closed:
-        testdelegatesnew=getdelegates(testnetconfigs.get("apinode"))
         try:
-            testdelegates = pd.read_csv(testnetconfigs.get("delegatecsv"),index_col=0)
-        except FileNotFoundError:
-            testdelegates=None
-        testdelegates=processdelegates(testdelegatesnew,testdelegates)
-        testdelegates,testmissedblockmsglist=makemissedblockmsglist(testdelegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
-        testdelegates.to_csv(testnetconfigs.get("delegatecsv"))
-        if len(testmissedblockmsglist)>0 and len(testnetconfigs.get("channels"))>0:
-                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
-                testnetdiscordnames=json.load(open('resources/testnet-discordnames.json'))
-                newtestmissedblockmsglist=modifymissedblockmsglist(testmissedblockmsglist,testnetdiscordnames,server)
-                message=makemissedblockmsg(newtestmissedblockmsglist,discordconfigs.get("blockinterval"))
-                for channelname in testnetconfigs.get("channels"):
-                    await bot.send_message(getchannel(channelname,server), message)
+            testdelegatesnew=getdelegates(testnetconfigs.get("apinode"))
+            try:
+                testdelegates = pd.read_csv(testnetconfigs.get("delegatecsv"),index_col=0)
+            except FileNotFoundError:
+                testdelegates=None
+            testdelegates=processdelegates(testdelegatesnew,testdelegates)
+            testdelegates,testmissedblockmsglist=makemissedblockmsglist(testdelegates,discordconfigs.get("blockinterval"),discordconfigs.get("minmissedblocks"),numdelegates=discordconfigs.get("numdelegates"))
+            testdelegates.to_csv(testnetconfigs.get("delegatecsv"))
+            if len(testmissedblockmsglist)>0 and len(testnetconfigs.get("channels"))>0:
+                    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), bot.servers)
+                    testnetdiscordnames=json.load(open('resources/testnet-discordnames.json'))
+                    newtestmissedblockmsglist=modifymissedblockmsglist(testmissedblockmsglist,testnetdiscordnames,server)
+                    message=makemissedblockmsg(newtestmissedblockmsglist,discordconfigs.get("blockinterval"))
+                    for channelname in testnetconfigs.get("channels"):
+                        await bot.send_message(getchannel(channelname,server), message)
+        except Exception as e:
+            print(e)
         await asyncio.sleep(discordconfigs.get("notificationmins")*60)
 
 if __name__ == '__main__':

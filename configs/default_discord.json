@@ -17,5 +17,6 @@
             "dev's"
             ],
     "msglenlimit":1800,
-    "priceurl":"https://api.coinmarketcap.com/v1/ticker/"
+    "priceurl":"https://api.coinmarketcap.com/v1/ticker/",
+    "poolsurl":"https://raw.githubusercontent.com/DEADP0OL/LWF-DiscordBot/master/files/pools.txt"
 }
