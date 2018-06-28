@@ -55,8 +55,8 @@ async def help(ctx):
                 discordconfigs.get("commandprefix")+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 discordconfigs.get("commandprefix")+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
                 discordconfigs.get("commandprefix")+'snapshot (mainnet/testnet)':'Show checksum for latest snapshot. Defaults to mainnet.',
-                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.',
-                discordconfigs.get("commandprefix")+'pools':'Provides a list of pools and their details.'
+                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'#,
+                #discordconfigs.get("commandprefix")+'pools':'Provides a list of pools and their details.'
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=[discordconfigs.get("commandprefix")+'help'],inline=False)
@@ -231,7 +231,7 @@ async def height(ctx,net='mainnet'):
     response=repr(backupheights)
     for response in formatmsg(response,discordconfigs.get("msglenlimit")):
         await bot.say(response)
-        
+'''   
 @bot.command(pass_context=True)
 async def pools(ctx):
     """Provides the pools list."""
@@ -250,7 +250,7 @@ async def pools(ctx):
         return
     for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
         await bot.say(response)
-
+'''
 async def price_loop():
     """Updates bot presence with current coin price."""
     await bot.wait_until_ready()
