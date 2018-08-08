@@ -34,7 +34,6 @@
         "calculator":"http://calculator.dpospool.io/",
         "pool optimization":"https://lwf.akhnout.com/pools",
         "payout verifier":"http://verifier.dutchpool.io/lwf/",
-        "payout tracker":"http://www.payout-tracker.deadpool.cf/",
         "help":"Community Tools"
                 },
     "wp":{
@@ -44,7 +43,7 @@
         "help":"Published Whitepapers"
                 },
     "support":{
-        "support team":"jamiec79, ghostfaceuk, simran, lucky, redtokay, pnwdrew, nickl",
+        "support team":"jamiec79, ghostfaceuk, bisu, lucky, redtokay, pnwdrew, nickl, kenneth",
         "help":"Members of the Support Team"        
                 }
 }
