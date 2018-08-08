@@ -68,7 +68,7 @@ def modifymissedblockmsglist(missedblockmsglist,discordnames,server):
         for j in discordnames:
             if delegate == j["delegate"]:
                 names.append(str(j["discordname"]).lower())
-        for x in [v for v in userlist if str(v.name).lower() in names]:
+        for x in [v for v in userlist if (str(v.name).lower() in names) or (str(v.display_name).lower() in names)]:
             name='<@{}>'.format(str(x.id))
             display=x.name
         if str(display).lower()==delegate.lower():
