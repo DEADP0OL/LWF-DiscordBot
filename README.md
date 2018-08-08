@@ -20,15 +20,21 @@ A set of algorithms to analyze the LWF blockchain and provide Discord messages.
 
 ## Installation
 
+Linux Ubuntu 16.10 and greater
+
 ```git clone https://github.com/DEADP0OL/LWF-DiscordBot```
 
 ```cd LWF-DiscordBot```
 
-```apt-get install python3-pip```
+```sudo apt-get install python3-pip```
 
-```pip3 install requests```
+```sudo pip3 install setuptools```
 
-```pip3 install --user -U discord.py```
+```sudo pip3 install requests```
+
+```sudo pip3 install pandas```
+
+```sudo pip3 install discord.py```
 
 ## Configuration
 
