@@ -54,9 +54,9 @@ async def help(ctx):
                 discordconfigs.get("commandprefix")+'price (<coin name>) (<currency>)':'Retrieves price data for the specified coin. Defaults to LWF and USD.',
                 discordconfigs.get("commandprefix")+'delegate (<username> or <rank>)':'Provides information of a delegate. Defaults to rank 201.',
                 discordconfigs.get("commandprefix")+'rednodes (mainnet/testnet)':'Lists delegates that are currently missing blocks. Defaults to mainnet.',
+                discordconfigs.get("commandprefix")+'oldnodes':'Lists mainnet delegates that have not updated their nodes.',
                 discordconfigs.get("commandprefix")+'snapshot (mainnet/testnet)':'Show checksum for latest snapshot. Defaults to mainnet.',
-                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'#,
-                #discordconfigs.get("commandprefix")+'pools':'Provides a list of pools and their details.'
+                discordconfigs.get("commandprefix")+'height (mainnet/testnet)':'Provides the current height accross mainnet or testnet nodes. Defaults to mainnet.'
                 }
     description='Available commands include:'
     embed=discordembeddict(commands,title=description,exclude=[discordconfigs.get("commandprefix")+'help'],inline=False)
@@ -170,7 +170,6 @@ async def rednodes(ctx,net='mainnet',ping="No"):
             if ping.lower()=="ping":
                 perms=ctx.message.author.roles
                 perms=[i.name.lower() for i in perms]
-                print(perms)
                 if any(x in perms for x in discordconfigs.get("elevatedperms")):
                     server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
                     mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
@@ -182,6 +181,32 @@ async def rednodes(ctx,net='mainnet',ping="No"):
                 response=makemissedblockmsg(missedblockmsglist,0,True)
         else:
             response = 'No red nodes'
+    for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
+        await bot.say(response)
+
+@bot.command(pass_context=True)
+async def oldnodes(ctx,ping="No"):
+    """Lists delegates that have not updated their nodes."""
+    try:
+        assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.server is None)
+    except AssertionError:
+        return
+    oldnodesmsglist=[{"username":v['name'],"version":v['node_version']} for v in requests.get('http://verifier.dutchpool.io/lwf/report.json').json()['delegates'] if v['ranked_node_version'] > 0]
+    if len(oldnodesmsglist)>0:
+        if ping.lower()=="ping":
+            perms=ctx.message.author.roles
+            perms=[i.name.lower() for i in perms]
+            if any(x in perms for x in discordconfigs.get("elevatedperms")):
+                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
+                mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
+                oldnodesmsglist=modifymissedblockmsglist(oldnodesmsglist,mainnetdiscordnames,server)
+                response=makeoldnodesmsg(oldnodesmsglist)
+            else:
+                response='Invalid permissions'
+        else:
+            response=makeoldnodesmsg(oldnodesmsglist)
+    else:
+        response = 'No old nodes'
     for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
         await bot.say(response)
 
@@ -231,26 +256,7 @@ async def height(ctx,net='mainnet'):
     response=repr(backupheights)
     for response in formatmsg(response,discordconfigs.get("msglenlimit")):
         await bot.say(response)
-'''   
-@bot.command(pass_context=True)
-async def pools(ctx):
-    """Provides the pools list."""
-    try:
-        assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.channel.name in ['voters_channel']) or (ctx.message.server is None)
-    except AssertionError:
-        return
-    try:
-        req = requests.get(discordconfigs.get("poolsurl"))
-        req.raise_for_status()
-        response=req.text
-    except Exception as e:
-        print(e)
-        response = 'Unable to read pools list from '+discordconfigs.get("poolsurl")
-        await bot.say(response)
-        return
-    for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
-        await bot.say(response)
-'''
+
 async def price_loop():
     """Updates bot presence with current coin price."""
     await bot.wait_until_ready()

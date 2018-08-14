@@ -79,3 +79,12 @@ def makemissedblockmsg(missedblockmsglist,blockinterval=0,includeprevious=False)
         elif yellowmessage != ":warning: :warning:":
             message=yellowmessage
     return message
+
+def makeoldnodesmsg(oldnodeslist):
+    """Creates a message to notify delegates of old node software."""
+    message=""
+    for i in oldnodeslist:
+        if message!="":
+            message=message+", "
+        message=message+i["username"]
+    return message
