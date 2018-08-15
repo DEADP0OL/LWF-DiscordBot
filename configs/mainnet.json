@@ -1,9 +1,9 @@
 {
     "apinode":"https://wallet.lwf.io/",
     "corenodes":[
-            "http://explorernode1.lwf.io:18124/",
-            "http://explorernode2.lwf.io:18124/",
-            "http://explorernode3.lwf.io:18124/",
+            "explorer1",
+            "explorer2",
+            "explorer3",
             "http://node1.lwf.io:18124/",
             "http://node2.lwf.io:18124/",
             "http://node3.lwf.io:18124/",
@@ -11,7 +11,6 @@
             ],
     "port":"18124",
     "channels":[
-            "lwf_bot"
             ],
     "delegatecsv":"files/mainnet-delegates.csv",
     "snapshoturl": "http://snapshots.lwf.io:4444/info/mainnet"

@@ -31,12 +31,15 @@ def getpeers(url):
     peers = pd.DataFrame(requests.get(url+'api/peers').json()['peers'])
     return peers
 
-def getstatus(url,backup,port,tol=1):
+def getstatus(url,backup,port,hosts={},tol=1):
     """gets current height from the list of backup nodes"""
     backupheights={}
     for i in backup:
         try:
-            backupheights[cleanurl(i,port)]='{:,.0f}'.format(getheight(i))
+            if i in hosts:
+                backupheights[cleanurl(i,port)]='{:,.0f}'.format(getheight(hosts[i]))
+            else:
+                backupheights[cleanurl(i,port)]='{:,.0f}'.format(getheight(i))
         except:
             backupheights[cleanurl(i,port)]='not available'
     try:

@@ -1,7 +1,6 @@
 {
     "apinode":"https://twallet.lwf.io/",
     "corenodes":[
-            "http://texplorer-node.lwf.io:18101/",
             "http://testnode1.lwf.io:18101/",
             "http://testnode2.lwf.io:18101/",
             "http://testnode3.lwf.io:18101/"

@@ -2,3 +2,5 @@
 configs/discord.json
 test.py
 *.pyc
+files/testnet-delegates.csv
+files/mainnet-delegates.csv

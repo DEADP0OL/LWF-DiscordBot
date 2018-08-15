@@ -249,10 +249,11 @@ async def height(ctx,net='mainnet'):
         response = 'Network input incorrect. Should be "mainnet" or "testnet".'
         await bot.say(response)
         return
+    hosts=json.load(open('resources/hosts.json'))
     if net.lower()=='testnet':
-        connectedpeers,peerheight,consensus,backupheights=getstatus(testnetconfigs.get("apinode"),testnetconfigs.get("corenodes"),testnetconfigs.get("port"))
+        connectedpeers,peerheight,consensus,backupheights=getstatus(testnetconfigs.get("apinode"),testnetconfigs.get("corenodes"),testnetconfigs.get("port"),hosts)
     else:
-        connectedpeers,peerheight,consensus,backupheights=getstatus(mainnetconfigs.get("apinode"),mainnetconfigs.get("corenodes"),mainnetconfigs.get("port"))
+        connectedpeers,peerheight,consensus,backupheights=getstatus(mainnetconfigs.get("apinode"),mainnetconfigs.get("corenodes"),mainnetconfigs.get("port"),hosts)
     response=repr(backupheights)
     for response in formatmsg(response,discordconfigs.get("msglenlimit")):
         await bot.say(response)
