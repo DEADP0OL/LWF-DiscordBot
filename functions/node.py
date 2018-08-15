@@ -67,7 +67,7 @@ def getchecksum(url):
         
 def getheight(url):
     """gets current block height from the url node api"""
-    height = requests.get(url+'api/blocks/getHeight').json()['height']
+    height = requests.get(url+'api/blocks/getHeight',timeout=1).json()['height']
     return height
 
 def cleanurl(url,port):
