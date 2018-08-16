@@ -192,27 +192,31 @@ async def oldnodes(ctx,ping="No"):
         assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.server is None)
     except AssertionError:
         return
-    versions=requests.get('http://verifier.dutchpool.io/lwf/delegates.json').json()
-    currentversion='0.0.1'
-    for key,value in versions.items():
-        if version.parse(value['version'])>version.parse(currentversion):
-            currentversion=value['version']
-    oldnodesmsglist=[{"username":key,"version":value['version']} for key,value in versions.items() if value['version'] != currentversion]
-    if len(oldnodesmsglist)>0:
-        if ping.lower()=="ping":
-            perms=ctx.message.author.roles
-            perms=[i.name.lower() for i in perms]
-            if any(x in perms for x in discordconfigs.get("elevatedperms")):
-                server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
-                mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
-                oldnodesmsglist=modifymissedblockmsglist(oldnodesmsglist,mainnetdiscordnames,server)
-                response=makeoldnodesmsg(oldnodesmsglist)
+    try:
+        versions=requests.get('http://verifier.dutchpool.io/lwf/delegates.json').json()
+        currentversion='0.0.1'
+        for key,value in versions.items():
+            if version.parse(value['version'])>version.parse(currentversion):
+                currentversion=value['version']
+        oldnodesmsglist=[{"username":key,"version":value['version']} for key,value in versions.items() if value['version'] != currentversion]
+        if len(oldnodesmsglist)>0:
+            if ping.lower()=="ping":
+                perms=ctx.message.author.roles
+                perms=[i.name.lower() for i in perms]
+                if any(x in perms for x in discordconfigs.get("elevatedperms")):
+                    server = discord.utils.find(lambda m: (m.name).lower() == discordconfigs.get("bot_server"), list(bot.servers))
+                    mainnetdiscordnames=json.load(open('resources/mainnet-discordnames.json'))
+                    oldnodesmsglist=modifymissedblockmsglist(oldnodesmsglist,mainnetdiscordnames,server)
+                    response=makeoldnodesmsg(oldnodesmsglist)
+                else:
+                    response='Invalid permissions'
             else:
-                response='Invalid permissions'
+                response=makeoldnodesmsg(oldnodesmsglist)
         else:
-            response=makeoldnodesmsg(oldnodesmsglist)
-    else:
-        response = 'No old nodes'
+            response = 'No old nodes'
+    except Exception as e:
+        print(e)
+        response = 'Unable to parse data from http://verifier.dutchpool.io/lwf/delegates.json correctly.'
     for response in formatmsg(response,discordconfigs.get("msglenlimit"),'','','',''):
         await bot.say(response)
 
