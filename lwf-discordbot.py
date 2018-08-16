@@ -8,6 +8,7 @@ import discord
 import logging
 import asyncio
 from discord.ext import commands
+from packaging import version
 
 '''Load Functions'''
 from functions.node import *
@@ -191,7 +192,12 @@ async def oldnodes(ctx,ping="No"):
         assert (ctx.message.channel.name in discordconfigs.get("listen_channels")) or (ctx.message.server is None)
     except AssertionError:
         return
-    oldnodesmsglist=[{"username":v['name'],"version":v['node_version']} for v in requests.get('http://verifier.dutchpool.io/lwf/report.json').json()['delegates'] if v['ranked_node_version'] > 0]
+    versions=requests.get('http://verifier.dutchpool.io/lwf/delegates.json').json()
+    currentversion='0.0.1'
+    for key,value in versions.items():
+        if version.parse(value['version'])>version.parse(currentversion):
+            currentversion=value['version']
+    oldnodesmsglist=[{"username":key,"version":value['version']} for key,value in versions.items() if value['version'] != currentversion]
     if len(oldnodesmsglist)>0:
         if ping.lower()=="ping":
             perms=ctx.message.author.roles
