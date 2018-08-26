@@ -11,6 +11,7 @@
             ],
     "port":"18124",
     "channels":[
+            "lwf_bot"
             ],
     "delegatecsv":"files/mainnet-delegates.csv",
     "snapshoturl": "http://snapshots.lwf.io:4444/info/mainnet"
